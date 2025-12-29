@@ -49,18 +49,18 @@ constructor(
 
     val wheels =
             listOf(
-                    Upgrade(1, "Roadster", 0, R.drawable.wheel_1),
-                    Upgrade(2, "Gripper", 30, R.drawable.wheel_2),
-                    Upgrade(3, "TurboGrip", 60, R.drawable.wheel_3),
-                    Upgrade(4, "FeatherSpin", 90, R.drawable.wheel_4),
+                    Upgrade(1, "Roadster", 0, R.drawable.wheel_1, 1.2f),
+                    Upgrade(2, "Gripper", 30, R.drawable.wheel_2, 1.4f),
+                    Upgrade(3, "TurboGrip", 60, R.drawable.wheel_3, 1.6f),
+                    Upgrade(4, "FeatherSpin", 90, R.drawable.wheel_4, 1.8f),
             )
 
     val turbines =
             listOf(
-                    Upgrade(1, "Breeze", 0, R.drawable.turbine_1),
-                    Upgrade(2, "Draft", 30, R.drawable.turbine_2),
-                    Upgrade(3, "Gust", 60, R.drawable.turbine_3),
-                    Upgrade(4, "Cyclone", 90, R.drawable.turbine_4),
+                    Upgrade(1, "Breeze", 0, R.drawable.turbine_1, 1.2f),
+                    Upgrade(2, "Draft", 30, R.drawable.turbine_2, 1.4f),
+                    Upgrade(3, "Gust", 60, R.drawable.turbine_3, 1.6f),
+                    Upgrade(4, "Cyclone", 90, R.drawable.turbine_4, 1.8f),
             )
 
     init {

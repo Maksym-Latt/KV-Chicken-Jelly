@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,7 +72,10 @@ fun GarageScreen(
                         GarageItemUi(
                             id = it.id,
                             iconRes = it.iconRes,
-                            isSelected = it.id == state.pendingWheelId
+                            isSelected = it.id == state.pendingWheelId,
+                            level = it.id,
+                            speedModifier = it.speedModifier,
+                            price = it.price
                         )
                     }
 
@@ -80,7 +84,10 @@ fun GarageScreen(
                         GarageItemUi(
                             id = it.id,
                             iconRes = it.iconRes,
-                            isSelected = it.id == state.pendingTurbineId
+                            isSelected = it.id == state.pendingTurbineId,
+                            level = it.id,
+                            speedModifier = it.speedModifier,
+                            price = it.price
                         )
                     }
             }
@@ -172,20 +179,52 @@ fun GarageScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                WideButton(
-                    text = if (isEquipped) "Equipped" else "Equip ($selectedItemPrice)",
-                    onClick = {
-                        if (!isEquipped && canAfford) {
-                            when (tab) {
-                                0 -> viewModel.applySelectedWheel()
-                                else -> viewModel.applySelectedTurbine()
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .widthIn(min = 220.dp, max = 320.dp),
-                    textSize = 40
-                )
+                val selectedItem = items.find { it.isSelected }
+
+                Column(
+                    modifier = Modifier.widthIn(min = 220.dp, max = 320.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (selectedItem != null) {
+                        OutlineText(
+                            text = "Level: ${selectedItem.level}",
+                            fontFamily = font,
+                            fontSize = 20,
+                            color = Color.White,
+                            outlineThickness = 2.dp
+                        )
+                        OutlineText(
+                            text = "Speed: ${selectedItem.speedModifier}x",
+                            fontFamily = font,
+                            fontSize = 20,
+                            color = Color(0xff5be16d),
+                            outlineThickness = 2.dp
+                        )
+                        OutlineText(
+                            text = "Price: ${selectedItem.price}",
+                            fontFamily = font,
+                            fontSize = 20,
+                            color = Color.White,
+                            outlineThickness = 2.dp
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        WideButton(
+                            text = if (isEquipped) "Equipped" else if (canAfford) "Buy" else "Locked",
+                            onClick = {
+                                if (!isEquipped && canAfford) {
+                                    when (tab) {
+                                        0 -> viewModel.applySelectedWheel()
+                                        else -> viewModel.applySelectedTurbine()
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            textSize = 34
+                        )
+                    }
+                }
             }
         }
     }
@@ -284,6 +323,13 @@ private fun GarageGrid(
                     .aspectRatio(1f)
                     .clip(shape)
                     .background(Color.White.copy(alpha = 0.92f))
+                    .then(
+                        if (item.isSelected) {
+                            Modifier.border(3.dp, Color(0xFFFFD700), shape)
+                        } else {
+                            Modifier
+                        }
+                    )
                     .clickable { onSelect(item.id) }
                     .padding(8.dp),
                 contentAlignment = Alignment.Center
@@ -300,7 +346,7 @@ private fun GarageGrid(
                         modifier = Modifier
                             .matchParentSize()
                             .clip(shape)
-                            .background(Color(0xff5be16d).copy(alpha = 0.18f))
+                            .background(Color(0xFFFFD700).copy(alpha = 0.12f))
                     )
                 }
             }
@@ -312,4 +358,7 @@ private data class GarageItemUi(
     val id: Int,
     val iconRes: Int,
     val isSelected: Boolean,
+    val level: Int,
+    val speedModifier: Float,
+    val price: Int,
 )

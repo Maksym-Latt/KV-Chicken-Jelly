@@ -1,5 +1,8 @@
 package com.chicken.jelly.ui.screens
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,11 +27,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.chicken.jelly.R
+import com.chicken.jelly.config.GameConfig
 import com.chicken.jelly.sound.SoundManager
 import com.chicken.jelly.ui.components.EggBadge
 import com.chicken.jelly.ui.components.OutlineText
@@ -44,77 +49,80 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
     val font = MaterialTheme.typography.bodyLarge.fontFamily ?: FontFamily.Default
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Background based on current level
+        val backgroundRes =
+                when (state.currentLevel) {
+                    1 -> R.drawable.bg_game // Level 1
+                    2 -> R.drawable.bg_garage // Level 2 (placeholder, replace with actual)
+                    else -> R.drawable.bg_menu // Level 3 (placeholder, replace with actual)
+                }
+
         Image(
-            painter = painterResource(id = R.drawable.bg_game),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+                painter = painterResource(id = backgroundRes),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
         )
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
             ) {
                 RoundIconButton(icon = R.drawable.ic_home, onClick = onExit)
+
+                // Timer display
+                OutlineText(
+                        text = "${state.levelTimeRemaining}s",
+                        fontFamily = font,
+                        fontSize = 32,
+                        color = if (state.levelTimeRemaining <= 5) Color.Red else Color.White,
+                        outlineThickness = 3.dp
+                )
+
                 EggBadge(value = state.eggs)
                 RoundIconButton(icon = R.drawable.ic_pause, onClick = viewModel::pauseGame)
             }
             Box(modifier = Modifier.weight(1f)) {
                 LaneView(state.playerLane)
                 ItemLayer(state)
-                Image(
-                    painter = painterResource(id = R.drawable.player_game),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .height(200.dp)
-                )
+                PlayerCar(playerLane = state.playerLane)
                 if (state.showTutorial) {
                     TutorialOverlay(font = font, onStart = { viewModel.startRun(soundManager) })
                 }
             }
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_arrow),
-                    contentDescription = "Left",
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clickableNoRipple { viewModel.moveLeft() }
+                        painter = painterResource(id = R.drawable.ic_arrow),
+                        contentDescription = "Left",
+                        modifier = Modifier.size(72.dp).clickableNoRipple { viewModel.moveLeft() }
                 )
                 Image(
-                    painter = painterResource(id = R.drawable.ic_arrow),
-                    contentDescription = "Right",
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clickableNoRipple { viewModel.moveRight() }
+                        painter = painterResource(id = R.drawable.ic_arrow),
+                        contentDescription = "Right",
+                        modifier = Modifier.size(72.dp).clickableNoRipple { viewModel.moveRight() }
                 )
             }
         }
+        if (state.isTransitioning) {
+            LevelTransitionOverlay(level = state.currentLevel, font = font)
+        }
         if (state.isPaused && !state.showResult && !state.showTutorial) {
             Box(modifier = Modifier.align(Alignment.Center)) {
-                PauseOverlay(
-                    fontFamily = font,
-                    onResume = viewModel::resumeGame,
-                    onExit = onExit
-                )
+                PauseOverlay(fontFamily = font, onResume = viewModel::resumeGame, onExit = onExit)
             }
         }
         if (state.showResult) {
             Box(modifier = Modifier.align(Alignment.Center)) {
                 ResultOverlay(
-                    fontFamily = font,
-                    eggs = state.eggs,
-                    win = state.isWin,
-                    onRetry = { viewModel.startRun(soundManager) },
-                    onUpgrade = onExit
+                        fontFamily = font,
+                        eggs = state.eggs,
+                        win = state.isWin,
+                        onRetry = { viewModel.startRun(soundManager) },
+                        onUpgrade = onExit
                 )
             }
         }
@@ -124,20 +132,16 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
 @Composable
 private fun LaneView(playerLane: Int) {
     Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceEvenly) {
-        repeat(3) { index ->
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-            ) {
+        repeat(GameConfig.LANE_COUNT) { index ->
+            Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                 if (index == playerLane) {
                     Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 140.dp)
-                            .background(Color(0x33FFFFFF))
-                            .height(6.dp)
-                            .fillMaxWidth()
+                            modifier =
+                                    Modifier.align(Alignment.BottomCenter)
+                                            .padding(bottom = GameConfig.laneIndicatorBottomPadding)
+                                            .background(Color(0x33FFFFFF))
+                                            .height(GameConfig.laneIndicatorHeight)
+                                            .fillMaxWidth()
                     )
                 }
             }
@@ -148,47 +152,79 @@ private fun LaneView(playerLane: Int) {
 @Composable
 private fun BoxScope.ItemLayer(state: GameViewModel.UiState) {
     state.items.forEach { item ->
+        // Calculate perspective-based position and scale
+        val progress = item.speed
+        val horizontalOffset = GameConfig.getLaneOffset(item.lane, progress)
+        val verticalOffset = GameConfig.getVerticalOffset(progress)
+        val itemSize = GameConfig.getItemSize(progress)
 
-        val laneOffset = when (item.lane) {
-            0 -> (-80).dp
-            1 -> 0.dp
-            else -> 80.dp
-        }
-
-        val verticalOffset = (item.speed * 320).dp
+        // Use graphicsLayer for better performance
+        val scale = itemSize.value / 64f // Normalize to base size
 
         Image(
-            painter = painterResource(
-                id = if (item.isReward) R.drawable.egg else R.drawable.ic_garage
-            ),
-            contentDescription = null,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset(x = laneOffset, y = verticalOffset)
-                .size(64.dp),
-            contentScale = ContentScale.Fit
+                painter =
+                        painterResource(
+                                id = if (item.isReward) R.drawable.egg else R.drawable.ic_garage
+                        ),
+                contentDescription = null,
+                modifier =
+                        Modifier.align(Alignment.TopCenter)
+                                .offset(x = horizontalOffset, y = verticalOffset)
+                                .size(64.dp)
+                                .graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                },
+                contentScale = ContentScale.Fit
         )
     }
 }
+
+@Composable
+private fun LevelTransitionOverlay(level: Int, font: FontFamily) {
+    val scale by
+            animateFloatAsState(
+                    targetValue = 0.5f,
+                    animationSpec = tween(durationMillis = 2000),
+                    label = "transitionScale"
+            )
+
+    Box(
+            modifier =
+                    Modifier.fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.7f))
+                            .graphicsLayer {
+                                scaleX = scale
+                                scaleY = scale
+                            },
+            contentAlignment = Alignment.Center
+    ) {
+        OutlineText(
+                text = "Level $level",
+                fontFamily = font,
+                fontSize = 48,
+                color = Color.White,
+                outlineThickness = 4.dp
+        )
+    }
+}
+
 @Composable
 private fun TutorialOverlay(font: FontFamily, onStart: () -> Unit) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0x88000000)),
-        contentAlignment = Alignment.Center
+            modifier = Modifier.fillMaxSize().background(Color(0x88000000)),
+            contentAlignment = Alignment.Center
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .padding(16.dp)
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(16.dp)
         ) {
             OutlineText(
-                text = "Tap Start to drift!",
-                fontFamily = font,
-                fontSize = 28,
-                color = Color.White
+                    text = "Tap Start to drift!",
+                    fontFamily = font,
+                    fontSize = 28,
+                    color = Color.White
             )
             Spacer(modifier = Modifier.height(12.dp))
             WideButton(text = "Start", onClick = onStart)
@@ -197,10 +233,34 @@ private fun TutorialOverlay(font: FontFamily, onStart: () -> Unit) {
 }
 
 @Composable
+private fun BoxScope.PlayerCar(playerLane: Int) {
+    val targetOffset =
+            if (playerLane in 0 until GameConfig.LANE_COUNT) {
+                GameConfig.playerCarLaneOffsets[playerLane]
+            } else {
+                0.dp
+            }
+
+    // Smooth animation for lane changes
+    val horizontalOffset by
+            animateDpAsState(
+                    targetValue = targetOffset,
+                    animationSpec = tween(durationMillis = 200),
+                    label = "playerCarOffset"
+            )
+
+    Image(
+            painter = painterResource(id = R.drawable.player_game),
+            contentDescription = null,
+            modifier =
+                    Modifier.align(Alignment.BottomCenter)
+                            .offset(x = horizontalOffset, y = -GameConfig.playerCarBottomPadding)
+                            .height(GameConfig.playerCarHeight)
+    )
+}
+
+@Composable
 fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
-    clickable(
-        indication = null,
-        interactionSource = remember { MutableInteractionSource() }
-    ) {
-        onClick()
-    }
+        clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+            onClick()
+        }

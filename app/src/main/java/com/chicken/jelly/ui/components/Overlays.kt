@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -43,156 +42,139 @@ import com.chicken.jelly.R
 
 @Composable
 fun PauseOverlay(
-    fontFamily: FontFamily,
-    onResume: () -> Unit,
-    onExit: () -> Unit,
-    modifier: Modifier = Modifier
+        fontFamily: FontFamily,
+        soundEnabled: Boolean,
+        musicEnabled: Boolean,
+        onSoundToggle: (Boolean) -> Unit,
+        onMusicToggle: (Boolean) -> Unit,
+        onResume: () -> Unit,
+        onExit: () -> Unit,
+        modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing),
-        contentAlignment = Alignment.Center
+            modifier = modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing),
+            contentAlignment = Alignment.Center
     ) {
         BaseOverlay {
             OutlineText(
-                text = "Pause",
-                fontFamily = fontFamily,
-                fontSize = 82,
-                outlineThickness = 8.dp
+                    text = "Pause",
+                    fontFamily = fontFamily,
+                    fontSize = 82,
+                    outlineThickness = 8.dp
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
             ) {
                 SwitchColumn(
-                    label = "Sound",
-                    checked = true,
-                    onCheckedChange = {},
-                    fontFamily = fontFamily
+                        label = "Sound",
+                        checked = soundEnabled,
+                        onCheckedChange = onSoundToggle,
+                        fontFamily = fontFamily
                 )
                 SwitchColumn(
-                    label = "Music",
-                    checked = true,
-                    onCheckedChange = {},
-                    fontFamily = fontFamily
+                        label = "Music",
+                        checked = musicEnabled,
+                        onCheckedChange = onMusicToggle,
+                        fontFamily = fontFamily
                 )
             }
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            WideButton(
-                text = "Resume",
-                onClick = onResume,
-                textSize = 44
-            )
+            WideButton(text = "Resume", onClick = onResume, textSize = 44)
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            WideButton(
-                text = "Exit",
-                onClick = onExit,
-                red = true,
-                textSize = 44
-            )
+            WideButton(text = "Exit", onClick = onExit, red = true, textSize = 44)
         }
     }
 }
 
-
 @Composable
 fun ResultOverlay(
-    fontFamily: FontFamily,
-    eggs: Int,
-    win: Boolean,
-    onRetry: () -> Unit,
-    onUpgrade: () -> Unit,
-    modifier: Modifier = Modifier,
+        fontFamily: FontFamily,
+        eggs: Int,
+        win: Boolean,
+        onRetry: () -> Unit,
+        onUpgrade: () -> Unit,
+        modifier: Modifier = Modifier,
 ) {
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(id = R.drawable.bg_result),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+                painter = painterResource(id = R.drawable.bg_result),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
         )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xCC0E1800))
-        )
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xCC0E1800)))
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.weight(0.7f))
 
             OutlineText(
-                text = if (win) "Egg-cellent!" else "Yolk's on you!",
-                fontFamily = fontFamily,
-                fontSize = 76,
-                outlineThickness = 8.dp,
-                color = Color.White,
-                outline = Color(0xff0e1800),
+                    text = if (win) "Egg-cellent!" else "Yolk's on you!",
+                    fontFamily = fontFamily,
+                    fontSize = 76,
+                    outlineThickness = 8.dp,
+                    color = Color.White,
+                    outline = Color(0xff0e1800),
             )
 
             Spacer(modifier = Modifier.weight(0.25f))
 
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.egg),
-                    contentDescription = null,
-                    modifier = Modifier.height(84.dp),
-                    contentScale = ContentScale.Crop
+                        painter = painterResource(id = R.drawable.egg),
+                        contentDescription = null,
+                        modifier = Modifier.height(84.dp),
+                        contentScale = ContentScale.Crop
                 )
 
                 OutlineText(
-                    text = eggs.toString(),
-                    fontFamily = fontFamily,
-                    fontSize = 82,
-                    outlineThickness = 4.dp,
-                    color = Color.White,
-                    outline = Color(0xff0e1800),
-                    letterSpacing = 1.5.sp,
+                        text = eggs.toString(),
+                        fontFamily = fontFamily,
+                        fontSize = 82,
+                        outlineThickness = 4.dp,
+                        color = Color.White,
+                        outline = Color(0xff0e1800),
+                        letterSpacing = 1.5.sp,
                 )
             }
 
             Spacer(modifier = Modifier.weight(0.35f))
 
             Image(
-                painter = painterResource(id = if (win) R.drawable.player_win else R.drawable.player_lose),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth(0.8f),
-                contentScale = ContentScale.Crop
+                    painter =
+                            painterResource(
+                                    id = if (win) R.drawable.player_win else R.drawable.player_lose
+                            ),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth(0.8f),
+                    contentScale = ContentScale.Crop
             )
 
             Spacer(modifier = Modifier.weight(0.25f))
 
             WideButton(
-                icon = R.drawable.ic_garage,
-                onClick = onUpgrade,
-                modifier = Modifier.fillMaxWidth(0.4f)
+                    icon = R.drawable.ic_garage,
+                    onClick = onUpgrade,
+                    modifier = Modifier.fillMaxWidth(0.4f)
             )
-
 
             Spacer(modifier = Modifier.weight(0.2f))
 
-            WideButton(
-                text = "Play",
-                onClick = onRetry
-            )
+            WideButton(text = "Play", onClick = onRetry)
 
             Spacer(modifier = Modifier.weight(0.5f))
         }
@@ -201,43 +183,41 @@ fun ResultOverlay(
 
 @Composable
 fun SettingsOverlay(
-    fontFamily: FontFamily,
-    soundEnabled: Boolean,
-    musicEnabled: Boolean,
-    onSoundToggle: (Boolean) -> Unit,
-    onMusicToggle: (Boolean) -> Unit,
+        fontFamily: FontFamily,
+        soundEnabled: Boolean,
+        musicEnabled: Boolean,
+        onSoundToggle: (Boolean) -> Unit,
+        onMusicToggle: (Boolean) -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing),
-        contentAlignment = Alignment.Center
+            modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing),
+            contentAlignment = Alignment.Center
     ) {
         BaseOverlay {
             OutlineText(
-                text = "Settings",
-                fontFamily = fontFamily,
-                fontSize = 82,
-                outlineThickness = 8.dp
+                    text = "Settings",
+                    fontFamily = fontFamily,
+                    fontSize = 82,
+                    outlineThickness = 8.dp
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 SwitchColumn(
-                    label = "Sound",
-                    checked = soundEnabled,
-                    onCheckedChange = onSoundToggle,
-                    fontFamily = fontFamily
+                        label = "Sound",
+                        checked = soundEnabled,
+                        onCheckedChange = onSoundToggle,
+                        fontFamily = fontFamily
                 )
                 SwitchColumn(
-                    label = "Music",
-                    checked = musicEnabled,
-                    onCheckedChange = onMusicToggle,
-                    fontFamily = fontFamily
+                        label = "Music",
+                        checked = musicEnabled,
+                        onCheckedChange = onMusicToggle,
+                        fontFamily = fontFamily
                 )
             }
 
@@ -248,96 +228,86 @@ fun SettingsOverlay(
 
 @Composable
 private fun SwitchColumn(
-    label: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    fontFamily: FontFamily,
+        label: String,
+        checked: Boolean,
+        onCheckedChange: (Boolean) -> Unit,
+        fontFamily: FontFamily,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        OutlineText(
-            text = label,
-            fontFamily = fontFamily,
-            fontSize = 36,
-            outlineThickness = 1.dp
-        )
+        OutlineText(text = label, fontFamily = fontFamily, fontSize = 36, outlineThickness = 1.dp)
         Spacer(modifier = Modifier.height(6.dp))
-        GreenPillSwitch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
+        GreenPillSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 
 @Composable
 fun GreenPillSwitch(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-    width: Dp = 100.dp,
-    height: Dp = 66.dp,
-    borderWidth: Dp = 10.dp,
-    innerPadding: Dp = 10.dp,
-    borderColor: Color = Color(0xFF31B93D),
-    trackColor: Color = Color.White,
-    thumbColor: Color = Color(0xFF0F3D13),
+        checked: Boolean,
+        onCheckedChange: (Boolean) -> Unit,
+        modifier: Modifier = Modifier,
+        width: Dp = 100.dp,
+        height: Dp = 66.dp,
+        borderWidth: Dp = 10.dp,
+        innerPadding: Dp = 10.dp,
+        borderColor: Color = Color(0xFF31B93D),
+        trackColor: Color = Color.White,
+        thumbColor: Color = Color(0xFF0F3D13),
 ) {
     val shape = RoundedCornerShape(height / 2)
 
     val thumbSize = height - (innerPadding * 2)
     val targetX = if (checked) width - innerPadding - thumbSize else innerPadding
-    val thumbX = animateDpAsState(
-        targetValue = targetX,
-        animationSpec = tween(durationMillis = 180),
-        label = "thumbX"
-    ).value
+    val thumbX =
+            animateDpAsState(
+                            targetValue = targetX,
+                            animationSpec = tween(durationMillis = 180),
+                            label = "thumbX"
+                    )
+                    .value
 
     Box(
-        modifier = modifier
-            .size(width = width, height = height)
-            .border(borderWidth, borderColor, shape)
-            .background(trackColor, shape)
-            .toggleable(
-                value = checked,
-                role = Role.Switch,
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() },
-                onValueChange = onCheckedChange
-            ),
-        contentAlignment = Alignment.CenterStart
+            modifier =
+                    modifier.size(width = width, height = height)
+                            .border(borderWidth, borderColor, shape)
+                            .background(trackColor, shape)
+                            .toggleable(
+                                    value = checked,
+                                    role = Role.Switch,
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    onValueChange = onCheckedChange
+                            ),
+            contentAlignment = Alignment.CenterStart
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .padding(vertical = innerPadding)
-                .offset(x = thumbX)
-                .size(thumbSize)
-                .background(thumbColor, RoundedCornerShape(thumbSize / 2))
+                modifier =
+                        Modifier.fillMaxHeight()
+                                .padding(vertical = innerPadding)
+                                .offset(x = thumbX)
+                                .size(thumbSize)
+                                .background(thumbColor, RoundedCornerShape(thumbSize / 2))
         )
     }
 }
 
 @Composable
 private fun BaseOverlay(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
+        modifier: Modifier = Modifier,
+        content: @Composable () -> Unit,
 ) {
     Box(
-        modifier = modifier
-            .widthIn(min = 280.dp, max = 340.dp)
-            .background(
-                color = Color(0xff4cae6b),
-                shape = RoundedCornerShape(28.dp)
-            )
-            .border(
-                width = 8.dp,
-                color = Color(0xFF3C9116),
-                shape = RoundedCornerShape(28.dp)
-            )
-            .padding(horizontal = 24.dp, vertical = 20.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            content()
-        }
-    }
+            modifier =
+                    modifier.widthIn(min = 280.dp, max = 340.dp)
+                            .background(
+                                    color = Color(0xff4cae6b),
+                                    shape = RoundedCornerShape(28.dp)
+                            )
+                            .border(
+                                    width = 8.dp,
+                                    color = Color(0xFF3C9116),
+                                    shape = RoundedCornerShape(28.dp)
+                            )
+                            .padding(horizontal = 24.dp, vertical = 20.dp),
+            contentAlignment = Alignment.Center
+    ) { Column(horizontalAlignment = Alignment.CenterHorizontally) { content() } }
 }

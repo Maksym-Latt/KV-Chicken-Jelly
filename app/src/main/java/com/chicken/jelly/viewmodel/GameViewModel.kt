@@ -23,27 +23,29 @@ private val LANES = GameConfig.LANE_COUNT
 class GameViewModel
 @Inject
 constructor(
-        private val repository: GameRepository,
+    private val repository: GameRepository,
 ) : ViewModel() {
 
     data class UiState(
-            val eggs: Int = 0,
-            val score: Int = 0,
-            val playerLane: Int = 1,
-            val items: List<GameItem> = emptyList(),
-            val isPaused: Boolean = false,
-            val showTutorial: Boolean = true,
-            val showResult: Boolean = false,
-            val isWin: Boolean = false,
-            val soundEnabled: Boolean = true,
-            val musicEnabled: Boolean = true,
-            val wheelLevel: Int = 1,
-            val turbineLevel: Int = 1,
-            val pendingWheelId: Int = 1,
-            val pendingTurbineId: Int = 1,
-            val currentLevel: Int = 1,
-            val levelTimeRemaining: Int = GameConfig.LEVEL_DURATION_SECONDS,
-            val isTransitioning: Boolean = false,
+        val eggs: Int = 0,
+        val score: Int = 0,
+        val playerLane: Int = 1,
+        val items: List<GameItem> = emptyList(),
+        val isPaused: Boolean = false,
+        val showTutorial: Boolean = true,
+        val showResult: Boolean = false,
+        val isWin: Boolean = false,
+        val soundEnabled: Boolean = true,
+        val musicEnabled: Boolean = true,
+        val wheelLevel: Int = 1,
+        val turbineLevel: Int = 1,
+        val pendingWheelId: Int = 1,
+        val pendingTurbineId: Int = 1,
+        val currentLevel: Int = 1,
+        val levelTimeRemaining: Int = GameConfig.LEVEL_DURATION_SECONDS,
+        val isTransitioning: Boolean = false,
+        val ownedWheels: Set<Int> = setOf(1),
+        val ownedTurbines: Set<Int> = setOf(1),
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -61,20 +63,20 @@ constructor(
     private var timerJob: Job? = null
 
     val wheels =
-            listOf(
-                    Upgrade(1, "Roadster", 0, R.drawable.wheel_1, 1.2f),
-                    Upgrade(2, "Gripper", 30, R.drawable.wheel_2, 1.4f),
-                    Upgrade(3, "TurboGrip", 60, R.drawable.wheel_3, 1.6f),
-                    Upgrade(4, "FeatherSpin", 90, R.drawable.wheel_4, 1.8f),
-            )
+        listOf(
+            Upgrade(1, "Roadster", 0, R.drawable.wheel_1, 1.2f),
+            Upgrade(2, "Gripper", 30, R.drawable.wheel_2, 1.4f),
+            Upgrade(3, "TurboGrip", 60, R.drawable.wheel_3, 1.6f),
+            Upgrade(4, "FeatherSpin", 90, R.drawable.wheel_4, 1.8f),
+        )
 
     val turbines =
-            listOf(
-                    Upgrade(1, "Breeze", 0, R.drawable.turbine_1, 1.2f),
-                    Upgrade(2, "Draft", 30, R.drawable.turbine_2, 1.4f),
-                    Upgrade(3, "Gust", 60, R.drawable.turbine_3, 1.6f),
-                    Upgrade(4, "Cyclone", 90, R.drawable.turbine_4, 1.8f),
-            )
+        listOf(
+            Upgrade(1, "Breeze", 0, R.drawable.turbine_1, 1.2f),
+            Upgrade(2, "Draft", 30, R.drawable.turbine_2, 1.4f),
+            Upgrade(3, "Gust", 60, R.drawable.turbine_3, 1.6f),
+            Upgrade(4, "Cyclone", 90, R.drawable.turbine_4, 1.8f),
+        )
 
     init {
         observeRepository()
@@ -83,49 +85,63 @@ constructor(
     private fun observeRepository() {
         viewModelScope.launch {
             combine(
-                            repository.eggsBalance,
-                            repository.soundEnabled,
-                            repository.musicEnabled,
-                            repository.selectedWheel,
-                            repository.selectedTurbine
-                    ) { eggs, sound, music, wheel, turbine ->
+                repository.eggsBalance,
+                repository.soundEnabled,
+                repository.musicEnabled,
+                repository.selectedWheel,
+                repository.selectedTurbine,
+                repository.ownedWheels,
+                repository.ownedTurbines
+            ) { args ->
+                val eggs = args[0] as Int
+                val sound = args[1] as Boolean
+                val music = args[2] as Boolean
+                val wheel = args[3] as Int
+                val turbine = args[4] as Int
+                @Suppress("UNCHECKED_CAST") val ownedW = args[5] as Set<Int>
+                @Suppress("UNCHECKED_CAST") val ownedT = args[6] as Set<Int>
+
                 _uiState.value.copy(
-                        eggs = eggs,
-                        soundEnabled = sound,
-                        musicEnabled = music,
-                        wheelLevel = wheel,
-                        turbineLevel = turbine,
-                        pendingWheelId =
-                                if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel)
-                                        wheel
-                                else _uiState.value.pendingWheelId,
-                        pendingTurbineId =
-                                if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel)
-                                        turbine
-                                else _uiState.value.pendingTurbineId
+                    eggs = eggs,
+                    soundEnabled = sound,
+                    musicEnabled = music,
+                    wheelLevel = wheel,
+                    turbineLevel = turbine,
+                    ownedWheels = ownedW,
+                    ownedTurbines = ownedT,
+                    pendingWheelId =
+                        if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel)
+                            wheel
+                        else _uiState.value.pendingWheelId,
+                    pendingTurbineId =
+                        if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel)
+                            turbine
+                        else _uiState.value.pendingTurbineId
                 )
             }
-                    .collect { newState ->
-                        var resultingState =
-                                _uiState.value.copy(
-                                        eggs = newState.eggs,
-                                        soundEnabled = newState.soundEnabled,
-                                        musicEnabled = newState.musicEnabled,
-                                        wheelLevel = newState.wheelLevel,
-                                        turbineLevel = newState.turbineLevel
-                                )
+                .collect { newState ->
+                    var resultingState =
+                        _uiState.value.copy(
+                            eggs = newState.eggs,
+                            soundEnabled = newState.soundEnabled,
+                            musicEnabled = newState.musicEnabled,
+                            wheelLevel = newState.wheelLevel,
+                            turbineLevel = newState.turbineLevel,
+                            ownedWheels = newState.ownedWheels,
+                            ownedTurbines = newState.ownedTurbines
+                        )
 
-                        if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel) {
-                            resultingState =
-                                    resultingState.copy(pendingWheelId = newState.wheelLevel)
-                        }
-                        if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel) {
-                            resultingState =
-                                    resultingState.copy(pendingTurbineId = newState.turbineLevel)
-                        }
-
-                        _uiState.value = resultingState
+                    if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel) {
+                        resultingState =
+                            resultingState.copy(pendingWheelId = newState.wheelLevel)
                     }
+                    if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel) {
+                        resultingState =
+                            resultingState.copy(pendingTurbineId = newState.turbineLevel)
+                    }
+
+                    _uiState.value = resultingState
+                }
         }
     }
 
@@ -152,22 +168,22 @@ constructor(
 
     fun moveRight() {
         _uiState.value =
-                _uiState.value.copy(playerLane = minOf(LANES - 1, _uiState.value.playerLane + 1))
+            _uiState.value.copy(playerLane = minOf(LANES - 1, _uiState.value.playerLane + 1))
     }
 
     fun startRun(soundManager: SoundManager) {
         _uiState.value =
-                _uiState.value.copy(
-                        score = 0,
-                        showResult = false,
-                        isWin = false,
-                        showTutorial = false,
-                        items = emptyList(),
-                        isPaused = false,
-                        currentLevel = 1,
-                        levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
-                        isTransitioning = false
-                )
+            _uiState.value.copy(
+                score = 0,
+                showResult = false,
+                isWin = false,
+                showTutorial = false,
+                items = emptyList(),
+                isPaused = false,
+                currentLevel = 1,
+                levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
+                isTransitioning = false
+            )
         loopJob?.cancel()
         timerJob?.cancel()
         loopJob = viewModelScope.launch { loop(soundManager) }
@@ -211,11 +227,11 @@ constructor(
         // Move to next level
         val nextLevel = _uiState.value.currentLevel + 1
         _uiState.value =
-                _uiState.value.copy(
-                        currentLevel = nextLevel,
-                        levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
-                        isTransitioning = false
-                )
+            _uiState.value.copy(
+                currentLevel = nextLevel,
+                levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
+                isTransitioning = false
+            )
     }
 
     private suspend fun loop(soundManager: SoundManager) {
@@ -239,11 +255,11 @@ constructor(
         // Random spawning - even less frequent for performance and clarity
         val multiplier = currentSpeedMultiplier
         val baseFrequency =
-                when (_uiState.value.currentLevel) {
-                    1 -> 100 // Level 1 (roughly 1.6s at 60fps)
-                    2 -> 80 // Level 2 (roughly 1.3s at 60fps)
-                    else -> 65 // Level 3 (roughly 1.0s at 60fps)
-                }
+            when (_uiState.value.currentLevel) {
+                1 -> 100 // Level 1 (roughly 1.6s at 60fps)
+                2 -> 80 // Level 2 (roughly 1.3s at 60fps)
+                else -> 65 // Level 3 (roughly 1.0s at 60fps)
+            }
 
         val spawnFrequency = maxOf(5, (baseFrequency / multiplier).toInt())
 
@@ -341,13 +357,19 @@ constructor(
         val currentId = _uiState.value.wheelLevel
         if (targetId == currentId) return
 
+        // Check ownership
+        if (_uiState.value.ownedWheels.contains(targetId)) {
+            viewModelScope.launch { repository.selectWheel(targetId) }
+            return
+        }
+
         val upgrade = wheels.find { it.id == targetId } ?: return
 
         if (upgrade.price <= _uiState.value.eggs) {
             viewModelScope.launch {
                 repository.updateEggs(_uiState.value.eggs - upgrade.price)
+                repository.addOwnedWheel(targetId)
                 repository.selectWheel(targetId)
-                // Pending stays as is, acting as the new current.
             }
         }
     }
@@ -357,11 +379,18 @@ constructor(
         val currentId = _uiState.value.turbineLevel
         if (targetId == currentId) return
 
+        // Check ownership
+        if (_uiState.value.ownedTurbines.contains(targetId)) {
+            viewModelScope.launch { repository.selectTurbine(targetId) }
+            return
+        }
+
         val upgrade = turbines.find { it.id == targetId } ?: return
 
         if (upgrade.price <= _uiState.value.eggs) {
             viewModelScope.launch {
                 repository.updateEggs(_uiState.value.eggs - upgrade.price)
+                repository.addOwnedTurbine(targetId)
                 repository.selectTurbine(targetId)
             }
         }

@@ -69,10 +69,11 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
         )
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .windowInsetsPadding(WindowInsets.safeDrawing),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .windowInsetsPadding(WindowInsets.safeDrawing),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -105,19 +106,23 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
                 Image(
                     painter = painterResource(id = R.drawable.arrow),
                     contentDescription = "Left",
-                    modifier = Modifier.padding(10.dp)
-                        .size(100.dp)
-                        .clickableNoRipple { viewModel.moveLeft() }
+                    modifier =
+                        Modifier
+                            .padding(10.dp)
+                            .size(100.dp)
+                            .clickableNoRipple {
+                                viewModel.moveLeft()
+                            }
                 )
                 Image(
                     painter = painterResource(id = R.drawable.arrow),
                     contentDescription = "Right",
-                    modifier = Modifier.padding(10.dp)
-                        .size(100.dp)
-                        .graphicsLayer {
-                            scaleX = -1f
-                        }
-                        .clickableNoRipple { viewModel.moveRight() }
+                    modifier =
+                        Modifier
+                            .padding(10.dp)
+                            .size(100.dp)
+                            .graphicsLayer { scaleX = -1f }
+                            .clickableNoRipple { viewModel.moveRight() }
                 )
             }
         }
@@ -126,7 +131,15 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
         }
         if (state.isPaused && !state.showResult && !state.showTutorial) {
             Box(modifier = Modifier.align(Alignment.Center)) {
-                PauseOverlay(fontFamily = font, onResume = viewModel::resumeGame, onExit = onExit)
+                PauseOverlay(
+                    fontFamily = font,
+                    soundEnabled = state.soundEnabled,
+                    musicEnabled = state.musicEnabled,
+                    onSoundToggle = viewModel::toggleSound,
+                    onMusicToggle = viewModel::toggleMusic,
+                    onResume = viewModel::resumeGame,
+                    onExit = onExit
+                )
             }
         }
         if (state.showResult) {
@@ -147,11 +160,9 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
 private fun LaneView(playerLane: Int) {
     Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceEvenly) {
         repeat(GameConfig.LANE_COUNT) { index ->
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-            ) {
+            Box(modifier = Modifier
+                .weight(1f)
+                .fillMaxSize()) {
                 if (index == playerLane) {
                     Box(
                         modifier =

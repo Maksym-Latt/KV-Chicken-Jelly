@@ -3,8 +3,8 @@ package com.chicken.jelly.ui.screens
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,12 +23,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -99,6 +97,12 @@ fun GarageScreen(
             else -> state.pendingTurbineId == state.turbineLevel
         }
 
+    val isOwned =
+        when (tab) {
+            0 -> state.ownedWheels.contains(state.pendingWheelId)
+            else -> state.ownedTurbines.contains(state.pendingTurbineId)
+        }
+
     val selectedItemPrice =
         when (tab) {
             0 -> viewModel.wheels.find { it.id == state.pendingWheelId }?.price ?: 0
@@ -118,45 +122,36 @@ fun GarageScreen(
         Image(
             painter = painterResource(id = R.drawable.player_garage),
             contentDescription = null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.82f)
-                .align(Alignment.BottomCenter)
-                .offset(y = (-26).dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.82f)
+                    .align(Alignment.BottomCenter)
+                    .offset(y = (-26).dp),
             contentScale = ContentScale.FillWidth
         )
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                RoundIconButton(
-                    icon = R.drawable.ic_home,
-                    onClick = onBack,
-                    modifier = Modifier
-                )
+                RoundIconButton(icon = R.drawable.ic_home, onClick = onBack, modifier = Modifier)
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                EggBadge(
-                    value = state.eggs,
-                    modifier = Modifier.wrapContentWidth()
-                )
+                EggBadge(value = state.eggs, modifier = Modifier.wrapContentWidth())
             }
 
             Spacer(modifier = Modifier.weight(0.08f))
 
-            GarageTabs(
-                selectedIndex = tab,
-                onSelect = { tab = it },
-                font = font
-            )
+            GarageTabs(selectedIndex = tab, onSelect = { tab = it }, font = font)
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -211,16 +206,21 @@ fun GarageScreen(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         WideButton(
-                            text = if (isEquipped) "Equipped" else if (canAfford) "Buy" else "Locked",
+                            text =
+                                if (isEquipped) "Equipped"
+                                else if (isOwned) "Equip"
+                                else if (canAfford) "Buy" else "Locked",
                             onClick = {
-                                if (!isEquipped && canAfford) {
+                                if (!isEquipped && (isOwned || canAfford)) {
                                     when (tab) {
                                         0 -> viewModel.applySelectedWheel()
                                         else -> viewModel.applySelectedTurbine()
                                     }
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
                             textSize = 34
                         )
                     }
@@ -240,10 +240,11 @@ private fun GarageTabs(
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(2.dp)
-                .background(Color.White.copy(alpha = 0.85f), RectangleShape)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(2.dp)
+                    .background(Color.White.copy(alpha = 0.85f), RectangleShape)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -257,9 +258,10 @@ private fun GarageTabs(
                 val active = index == selectedIndex
 
                 Box(
-                    modifier = Modifier
-                        .clickable { onSelect(index) }
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                    modifier =
+                        Modifier
+                            .clickable { onSelect(index) }
+                            .padding(horizontal = 14.dp, vertical = 6.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     OutlineText(
@@ -274,28 +276,27 @@ private fun GarageTabs(
             }
         }
 
-        val target = when (selectedIndex) {
-            0 -> (-60).dp
-            1 -> 60.dp
-            else -> 0.dp
-        }
+        val target =
+            when (selectedIndex) {
+                0 -> (-60).dp
+                1 -> 60.dp
+                else -> 0.dp
+            }
         val x by animateDpAsState(targetValue = target, label = "tabIndicator")
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(3.dp),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .height(3.dp), contentAlignment = Alignment.Center) {
             Box(
-                modifier = Modifier
-                    .offset(x = x)
-                    .width(80.dp)
-                    .height(3.dp)
-                    .background(
-                        Color.White.copy(alpha = 0.9f),
-                        RoundedCornerShape(6.dp)
-                    )
+                modifier =
+                    Modifier
+                        .offset(x = x)
+                        .width(80.dp)
+                        .height(3.dp)
+                        .background(
+                            Color.White.copy(alpha = 0.9f),
+                            RoundedCornerShape(6.dp)
+                        )
             )
         }
     }
@@ -318,20 +319,21 @@ private fun GarageGrid(
     ) {
         items(items.take(4)) { item ->
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .aspectRatio(1f)
-                    .clip(shape)
-                    .background(Color.White.copy(alpha = 0.92f))
-                    .then(
-                        if (item.isSelected) {
-                            Modifier.border(3.dp, Color(0xFFFFD700), shape)
-                        } else {
-                            Modifier
-                        }
-                    )
-                    .clickable { onSelect(item.id) }
-                    .padding(8.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .aspectRatio(1f)
+                        .clip(shape)
+                        .background(Color.White.copy(alpha = 0.92f))
+                        .then(
+                            if (item.isSelected) {
+                                Modifier.border(3.dp, Color(0xFFFFD700), shape)
+                            } else {
+                                Modifier
+                            }
+                        )
+                        .clickable { onSelect(item.id) }
+                        .padding(8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -343,10 +345,11 @@ private fun GarageGrid(
 
                 if (item.isSelected) {
                     Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clip(shape)
-                            .background(Color(0xFFFFD700).copy(alpha = 0.12f))
+                        modifier =
+                            Modifier
+                                .matchParentSize()
+                                .clip(shape)
+                                .background(Color(0xFFFFD700).copy(alpha = 0.12f))
                     )
                 }
             }

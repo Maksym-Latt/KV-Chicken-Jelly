@@ -23,27 +23,27 @@ private val LANES = GameConfig.LANE_COUNT
 class GameViewModel
 @Inject
 constructor(
-    private val repository: GameRepository,
+        private val repository: GameRepository,
 ) : ViewModel() {
 
     data class UiState(
-        val eggs: Int = 0,
-        val score: Int = 0,
-        val playerLane: Int = 1,
-        val items: List<GameItem> = emptyList(),
-        val isPaused: Boolean = false,
-        val showTutorial: Boolean = true,
-        val showResult: Boolean = false,
-        val isWin: Boolean = false,
-        val soundEnabled: Boolean = true,
-        val musicEnabled: Boolean = true,
-        val wheelLevel: Int = 1,
-        val turbineLevel: Int = 1,
-        val pendingWheelId: Int = 1,
-        val pendingTurbineId: Int = 1,
-        val currentLevel: Int = 1,
-        val levelTimeRemaining: Int = GameConfig.LEVEL_DURATION_SECONDS,
-        val isTransitioning: Boolean = false,
+            val eggs: Int = 0,
+            val score: Int = 0,
+            val playerLane: Int = 1,
+            val items: List<GameItem> = emptyList(),
+            val isPaused: Boolean = false,
+            val showTutorial: Boolean = true,
+            val showResult: Boolean = false,
+            val isWin: Boolean = false,
+            val soundEnabled: Boolean = true,
+            val musicEnabled: Boolean = true,
+            val wheelLevel: Int = 1,
+            val turbineLevel: Int = 1,
+            val pendingWheelId: Int = 1,
+            val pendingTurbineId: Int = 1,
+            val currentLevel: Int = 1,
+            val levelTimeRemaining: Int = GameConfig.LEVEL_DURATION_SECONDS,
+            val isTransitioning: Boolean = false,
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -53,20 +53,20 @@ constructor(
     private var timerJob: Job? = null
 
     val wheels =
-        listOf(
-            Upgrade(1, "Roadster", 0, R.drawable.wheel_1, 1.2f),
-            Upgrade(2, "Gripper", 30, R.drawable.wheel_2, 1.4f),
-            Upgrade(3, "TurboGrip", 60, R.drawable.wheel_3, 1.6f),
-            Upgrade(4, "FeatherSpin", 90, R.drawable.wheel_4, 1.8f),
-        )
+            listOf(
+                    Upgrade(1, "Roadster", 0, R.drawable.wheel_1, 1.2f),
+                    Upgrade(2, "Gripper", 30, R.drawable.wheel_2, 1.4f),
+                    Upgrade(3, "TurboGrip", 60, R.drawable.wheel_3, 1.6f),
+                    Upgrade(4, "FeatherSpin", 90, R.drawable.wheel_4, 1.8f),
+            )
 
     val turbines =
-        listOf(
-            Upgrade(1, "Breeze", 0, R.drawable.turbine_1, 1.2f),
-            Upgrade(2, "Draft", 30, R.drawable.turbine_2, 1.4f),
-            Upgrade(3, "Gust", 60, R.drawable.turbine_3, 1.6f),
-            Upgrade(4, "Cyclone", 90, R.drawable.turbine_4, 1.8f),
-        )
+            listOf(
+                    Upgrade(1, "Breeze", 0, R.drawable.turbine_1, 1.2f),
+                    Upgrade(2, "Draft", 30, R.drawable.turbine_2, 1.4f),
+                    Upgrade(3, "Gust", 60, R.drawable.turbine_3, 1.6f),
+                    Upgrade(4, "Cyclone", 90, R.drawable.turbine_4, 1.8f),
+            )
 
     init {
         observeRepository()
@@ -75,51 +75,49 @@ constructor(
     private fun observeRepository() {
         viewModelScope.launch {
             combine(
-                repository.eggsBalance,
-                repository.soundEnabled,
-                repository.musicEnabled,
-                repository.selectedWheel,
-                repository.selectedTurbine
-            ) { eggs, sound, music, wheel, turbine ->
-
+                            repository.eggsBalance,
+                            repository.soundEnabled,
+                            repository.musicEnabled,
+                            repository.selectedWheel,
+                            repository.selectedTurbine
+                    ) { eggs, sound, music, wheel, turbine ->
                 _uiState.value.copy(
-                    eggs = eggs,
-                    soundEnabled = sound,
-                    musicEnabled = music,
-                    wheelLevel = wheel,
-                    turbineLevel = turbine,
-
-                    pendingWheelId =
-                        if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel)
-                            wheel
-                        else _uiState.value.pendingWheelId,
-                    pendingTurbineId =
-                        if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel)
-                            turbine
-                        else _uiState.value.pendingTurbineId
+                        eggs = eggs,
+                        soundEnabled = sound,
+                        musicEnabled = music,
+                        wheelLevel = wheel,
+                        turbineLevel = turbine,
+                        pendingWheelId =
+                                if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel)
+                                        wheel
+                                else _uiState.value.pendingWheelId,
+                        pendingTurbineId =
+                                if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel)
+                                        turbine
+                                else _uiState.value.pendingTurbineId
                 )
             }
-                .collect { newState ->
-                    var resultingState =
-                        _uiState.value.copy(
-                            eggs = newState.eggs,
-                            soundEnabled = newState.soundEnabled,
-                            musicEnabled = newState.musicEnabled,
-                            wheelLevel = newState.wheelLevel,
-                            turbineLevel = newState.turbineLevel
-                        )
+                    .collect { newState ->
+                        var resultingState =
+                                _uiState.value.copy(
+                                        eggs = newState.eggs,
+                                        soundEnabled = newState.soundEnabled,
+                                        musicEnabled = newState.musicEnabled,
+                                        wheelLevel = newState.wheelLevel,
+                                        turbineLevel = newState.turbineLevel
+                                )
 
-                    if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel) {
-                        resultingState =
-                            resultingState.copy(pendingWheelId = newState.wheelLevel)
-                    }
-                    if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel) {
-                        resultingState =
-                            resultingState.copy(pendingTurbineId = newState.turbineLevel)
-                    }
+                        if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel) {
+                            resultingState =
+                                    resultingState.copy(pendingWheelId = newState.wheelLevel)
+                        }
+                        if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel) {
+                            resultingState =
+                                    resultingState.copy(pendingTurbineId = newState.turbineLevel)
+                        }
 
-                    _uiState.value = resultingState
-                }
+                        _uiState.value = resultingState
+                    }
         }
     }
 
@@ -146,22 +144,22 @@ constructor(
 
     fun moveRight() {
         _uiState.value =
-            _uiState.value.copy(playerLane = minOf(LANES - 1, _uiState.value.playerLane + 1))
+                _uiState.value.copy(playerLane = minOf(LANES - 1, _uiState.value.playerLane + 1))
     }
 
     fun startRun(soundManager: SoundManager) {
         _uiState.value =
-            _uiState.value.copy(
-                score = 0,
-                showResult = false,
-                isWin = false,
-                showTutorial = false,
-                items = emptyList(),
-                isPaused = false,
-                currentLevel = 1,
-                levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
-                isTransitioning = false
-            )
+                _uiState.value.copy(
+                        score = 0,
+                        showResult = false,
+                        isWin = false,
+                        showTutorial = false,
+                        items = emptyList(),
+                        isPaused = false,
+                        currentLevel = 1,
+                        levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
+                        isTransitioning = false
+                )
         loopJob?.cancel()
         timerJob?.cancel()
         loopJob = viewModelScope.launch { loop(soundManager) }
@@ -205,11 +203,11 @@ constructor(
         // Move to next level
         val nextLevel = _uiState.value.currentLevel + 1
         _uiState.value =
-            _uiState.value.copy(
-                currentLevel = nextLevel,
-                levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
-                isTransitioning = false
-            )
+                _uiState.value.copy(
+                        currentLevel = nextLevel,
+                        levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
+                        isTransitioning = false
+                )
     }
 
     private suspend fun loop(soundManager: SoundManager) {
@@ -230,13 +228,13 @@ constructor(
         // Don't spawn in last 5 seconds of level
         if (_uiState.value.levelTimeRemaining <= GameConfig.STOP_SPAWN_BEFORE_END_SECONDS) return
 
-        // Random spawning - only spawn sometimes
+        // Random spawning - even less frequent for performance and clarity
         val spawnFrequency =
-            when (_uiState.value.currentLevel) {
-                1 -> 6 // Easy: spawn every 6th tick (reduced density)
-                2 -> 4 // Medium: spawn every 4th tick
-                else -> 3 // Hard: spawn every 3rd tick
-            }
+                when (_uiState.value.currentLevel) {
+                    1 -> 20 // Level 1: spawn every 1s (20 ticks * 50ms)
+                    2 -> 15 // Level 2: spawn every 750ms
+                    else -> 10 // Level 3: spawn every 500ms
+                }
 
         if (counter % spawnFrequency != 0) return
         if (Math.random() > 0.6) return // 60% chance to skip even when counter matches
@@ -255,10 +253,18 @@ constructor(
         var crashed = false
 
         _uiState.value.items.forEach { item ->
-            val progressed = item.copy(speed = item.speed + 0.015f) // Slower, smoother movement
-            if (progressed.speed >= GameConfig.COLLISION_THRESHOLD) {
+            var progressed = item.copy(speed = item.speed + 0.015f)
+
+            if (!progressed.isCollisionChecked && progressed.speed >= GameConfig.COLLISION_THRESHOLD
+            ) {
+                // Mark as checked so it doesn't trigger collision logic again for this item
+                progressed = progressed.copy(isCollisionChecked = true)
+
                 // Item has reached the player position
                 if (progressed.lane == _uiState.value.playerLane) {
+                    // It's a HIT
+                    progressed = progressed.copy(isHit = true)
+
                     if (progressed.isReward) {
                         eggs += 3
                         score += 5
@@ -268,12 +274,11 @@ constructor(
                         soundManager.playEffect(R.raw.sfx_crash)
                     }
                 }
-                // Keep item on screen longer before removing (completely off-screen)
-                if (progressed.speed >= 1.5f) {
-                    // Item is off screen, don't add to updated list
-                } else {
-                    updated.add(progressed)
-                }
+            }
+
+            // Keep item on screen until far gone (increased to ensure it goes off-screen)
+            if (progressed.speed >= 2.5f) {
+                // Item is definitely off screen bottom
             } else {
                 updated.add(progressed)
             }

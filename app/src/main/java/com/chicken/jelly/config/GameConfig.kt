@@ -41,10 +41,11 @@ object GameConfig {
         // === Vertical Position Configuration ===
 
         /** Vertical offset where items spawn (top of screen, in dp from top) */
-        val spawnVerticalOffset: Dp = 150.dp // Just above center
+        val spawnVerticalOffset: Dp =
+                280.dp // Even lower, just above car level for better perspective
 
         /** Vertical offset where collision occurs (near bottom, in dp from top) */
-        val collisionVerticalOffset: Dp = 400.dp
+        val collisionVerticalOffset: Dp = 600.dp
 
         /** Speed threshold for collision detection (0.0 to 1.0) */
         const val COLLISION_THRESHOLD = 1.0f

@@ -49,12 +49,11 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
     val font = MaterialTheme.typography.bodyLarge.fontFamily ?: FontFamily.Default
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background based on current level
         val backgroundRes =
                 when (state.currentLevel) {
-                    1 -> R.drawable.bg_game // Level 1
-                    2 -> R.drawable.bg_garage // Level 2 (placeholder, replace with actual)
-                    else -> R.drawable.bg_menu // Level 3 (placeholder, replace with actual)
+                    1 -> R.drawable.bg_game_1
+                    2 -> R.drawable.bg_game_2
+                    else -> R.drawable.bg_game_3
                 }
 
         Image(
@@ -167,7 +166,7 @@ private fun BoxScope.ItemLayer(state: GameViewModel.UiState) {
         Image(
                 painter =
                         painterResource(
-                                id = if (item.isReward) R.drawable.egg else R.drawable.ic_garage
+                                id = if (item.isReward) R.drawable.egg else R.drawable.ic_stack
                         ),
                 contentDescription = null,
                 modifier =

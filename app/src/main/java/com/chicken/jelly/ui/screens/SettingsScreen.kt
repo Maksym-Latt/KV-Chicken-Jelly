@@ -2,8 +2,11 @@ package com.chicken.jelly.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -30,8 +33,16 @@ fun SettingsScreen(viewModel: GameViewModel, onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-        RoundIconButton(icon = R.drawable.ic_home, onClick = onBack, modifier = Modifier.padding(16.dp).align(Alignment.TopStart))
-        Box(modifier = Modifier.align(Alignment.Center).padding(horizontal = 16.dp)) {
+        RoundIconButton(
+            icon = R.drawable.ic_home,
+            onClick = onBack,
+            modifier = Modifier
+                .padding(16.dp)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .align (Alignment.TopStart))
+        Box(modifier = Modifier
+            .align(Alignment.Center)
+            .padding(horizontal = 16.dp)) {
             SettingsOverlay(
                 fontFamily = font,
                 soundEnabled = state.soundEnabled,

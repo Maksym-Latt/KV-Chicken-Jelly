@@ -42,12 +42,6 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         hideSystemUI()
-        soundManager.resumeAfterLifecycle()
-    }
-
-    override fun onPause() {
-        soundManager.pauseForLifecycle()
-        super.onPause()
     }
 
     override fun onDestroy() {

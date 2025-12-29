@@ -180,14 +180,34 @@ constructor(
                 showTutorial = false,
                 items = emptyList(),
                 isPaused = false,
+                playerLane = 1,
                 currentLevel = 1,
                 levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
                 isTransitioning = false
             )
+        soundManager.playEffect(R.raw.sfx_engine)
         loopJob?.cancel()
         timerJob?.cancel()
         loopJob = viewModelScope.launch { loop(soundManager) }
         timerJob = viewModelScope.launch { levelTimer(soundManager) }
+    }
+
+    fun resetForNewGame() {
+        loopJob?.cancel()
+        timerJob?.cancel()
+        _uiState.value =
+            _uiState.value.copy(
+                score = 0,
+                playerLane = 1,
+                items = emptyList(),
+                isPaused = false,
+                showTutorial = true,
+                showResult = false,
+                isWin = false,
+                currentLevel = 1,
+                levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
+                isTransitioning = false
+            )
     }
 
     private suspend fun levelTimer(soundManager: SoundManager) {
@@ -205,7 +225,7 @@ constructor(
                 // Level complete
                 if (_uiState.value.currentLevel >= 3) {
                     // Game won!
-                    showResult(true)
+                    showResult(true, soundManager)
                     return
                 } else {
                     // Transition to next level
@@ -219,7 +239,7 @@ constructor(
         _uiState.value = _uiState.value.copy(isTransitioning = true, items = emptyList())
 
         // Play transition sound
-        soundManager.playEffect(R.raw.sfx_win)
+        soundManager.playEffect(R.raw.sfx_engine)
 
         // Wait for transition animation
         delay(2000)
@@ -232,6 +252,8 @@ constructor(
                 levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
                 isTransitioning = false
             )
+
+        soundManager.playEffect(R.raw.sfx_engine)
     }
 
     private suspend fun loop(soundManager: SoundManager) {
@@ -325,7 +347,7 @@ constructor(
             viewModelScope.launch { repository.updateEggs(eggs) }
         }
         if (crashed) {
-            showResult(false)
+            showResult(false, soundManager)
         }
     }
 
@@ -337,9 +359,12 @@ constructor(
         _uiState.value = _uiState.value.copy(isPaused = false)
     }
 
-    fun showResult(win: Boolean) {
+    fun showResult(win: Boolean, soundManager: SoundManager? = null) {
+        if (_uiState.value.showResult) return
         _uiState.value = _uiState.value.copy(isPaused = true, showResult = true, isWin = win)
         loopJob?.cancel()
+        timerJob?.cancel()
+        soundManager?.playEffect(if (win) R.raw.sfx_win else R.raw.sfx_lose)
     }
 
     // --- Selection Logic ---

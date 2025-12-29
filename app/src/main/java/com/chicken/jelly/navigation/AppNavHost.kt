@@ -2,6 +2,7 @@ package com.chicken.jelly.navigation
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -9,6 +10,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.chicken.jelly.sound.SoundManager
 import com.chicken.jelly.ui.screens.GameScreen
 import com.chicken.jelly.ui.screens.GarageScreen
@@ -30,9 +34,24 @@ sealed class AppDestination(val route: String) {
 fun AppNavHost(soundManager: SoundManager, modifier: Modifier = Modifier) {
     val navController: NavHostController = rememberNavController()
     val gameViewModel: GameViewModel = hiltViewModel()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
         gameViewModel.observeSound(soundManager)
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_PAUSE -> soundManager.pauseForLifecycle()
+                    Lifecycle.Event.ON_RESUME -> soundManager.resumeAfterLifecycle()
+                    else -> Unit
+                }
+            }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     NavHost(
@@ -50,6 +69,7 @@ fun AppNavHost(soundManager: SoundManager, modifier: Modifier = Modifier) {
         composable(AppDestination.Menu.route) {
             MenuScreen(
                 onPlay = {
+                    gameViewModel.resetForNewGame()
                     soundManager.playGameMusic()
                     navController.navigate(AppDestination.Game.route)
                 },

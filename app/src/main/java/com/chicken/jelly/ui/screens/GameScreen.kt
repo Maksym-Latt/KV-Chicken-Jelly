@@ -1,7 +1,6 @@
 package com.chicken.jelly.ui.screens
 
-import android.R.attr.scaleX
-import android.R.attr.scaleY
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -26,6 +25,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -37,6 +38,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LocalLifecycleOwner
 import com.chicken.jelly.R
 import com.chicken.jelly.config.GameConfig
 import com.chicken.jelly.sound.SoundManager
@@ -52,6 +56,37 @@ import com.chicken.jelly.viewmodel.GameViewModel
 fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: SoundManager) {
     val state by viewModel.uiState.collectAsState()
     val font = MaterialTheme.typography.bodyLarge.fontFamily ?: FontFamily.Default
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(Unit) {
+        soundManager.playGameMusic()
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_PAUSE -> {
+                        viewModel.pauseGame()
+                        soundManager.pauseForLifecycle()
+                    }
+
+                    Lifecycle.Event.ON_RESUME -> soundManager.resumeAfterLifecycle()
+                    else -> Unit
+                }
+            }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    BackHandler {
+        if (state.showResult) {
+            onExit()
+        } else {
+            viewModel.pauseGame()
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         val backgroundRes =
@@ -93,7 +128,7 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
                 LaneView(state.playerLane)
                 ItemLayer(state)
                 PlayerCar(state = state)
-                if (state.showTutorial) {
+                if (state.showTutorial && !state.isPaused) {
                     TutorialOverlay(font = font, onStart = { viewModel.startRun(soundManager) })
                 }
             }
@@ -129,7 +164,7 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
         if (state.isTransitioning) {
             LevelTransitionOverlay(level = state.currentLevel, font = font)
         }
-        if (state.isPaused && !state.showResult && !state.showTutorial) {
+        if (state.isPaused && !state.showResult) {
             Box(modifier = Modifier.align(Alignment.Center)) {
                 PauseOverlay(
                     fontFamily = font,

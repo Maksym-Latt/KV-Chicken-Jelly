@@ -7,4 +7,5 @@ data class GameItem(
         val speed: Float,
         val isHit: Boolean = false,
         val isCollisionChecked: Boolean = false,
+        val moveDelayMillis: Int = 500,
 )

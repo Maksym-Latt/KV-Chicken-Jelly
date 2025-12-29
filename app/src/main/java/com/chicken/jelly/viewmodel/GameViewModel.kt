@@ -228,7 +228,7 @@ constructor(
             spawnItem(counter)
             moveItems(soundManager)
             counter++
-            delay(50) // Faster update rate for smoother animation
+            delay(16) // ~60 FPS update rate for smooth animation
         }
     }
 
@@ -240,9 +240,9 @@ constructor(
         val multiplier = currentSpeedMultiplier
         val baseFrequency =
                 when (_uiState.value.currentLevel) {
-                    1 -> 30 // Normal level 1
-                    2 -> 25 // Normal level 2
-                    else -> 20 // Normal level 3
+                    1 -> 100 // Level 1 (roughly 1.6s at 60fps)
+                    2 -> 80 // Level 2 (roughly 1.3s at 60fps)
+                    else -> 65 // Level 3 (roughly 1.0s at 60fps)
                 }
 
         val spawnFrequency = maxOf(5, (baseFrequency / multiplier).toInt())
@@ -265,7 +265,15 @@ constructor(
 
         _uiState.value.items.forEach { item ->
             val multiplier = currentSpeedMultiplier
-            var progressed = item.copy(speed = item.speed + 0.0075f * multiplier)
+            var progressed = item
+
+            if (item.moveDelayMillis > 0) {
+                // Item is in "warm-up" phase, only update its delay
+                progressed = item.copy(moveDelayMillis = maxOf(0, item.moveDelayMillis - 16))
+            } else {
+                // Item is active and moving
+                progressed = item.copy(speed = item.speed + 0.0024f * multiplier)
+            }
 
             if (!progressed.isCollisionChecked && progressed.speed >= GameConfig.COLLISION_THRESHOLD
             ) {

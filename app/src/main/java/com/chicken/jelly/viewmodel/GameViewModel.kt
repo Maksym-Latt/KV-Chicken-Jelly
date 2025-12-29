@@ -23,27 +23,27 @@ private val LANES = GameConfig.LANE_COUNT
 class GameViewModel
 @Inject
 constructor(
-        private val repository: GameRepository,
+    private val repository: GameRepository,
 ) : ViewModel() {
 
     data class UiState(
-            val eggs: Int = 0,
-            val score: Int = 0,
-            val playerLane: Int = 1,
-            val items: List<GameItem> = emptyList(),
-            val isPaused: Boolean = false,
-            val showTutorial: Boolean = true,
-            val showResult: Boolean = false,
-            val isWin: Boolean = false,
-            val soundEnabled: Boolean = true,
-            val musicEnabled: Boolean = true,
-            val wheelLevel: Int = 1,
-            val turbineLevel: Int = 1,
-            val pendingWheelId: Int = 1,
-            val pendingTurbineId: Int = 1,
-            val currentLevel: Int = 1,
-            val levelTimeRemaining: Int = GameConfig.LEVEL_DURATION_SECONDS,
-            val isTransitioning: Boolean = false,
+        val eggs: Int = 0,
+        val score: Int = 0,
+        val playerLane: Int = 1,
+        val items: List<GameItem> = emptyList(),
+        val isPaused: Boolean = false,
+        val showTutorial: Boolean = true,
+        val showResult: Boolean = false,
+        val isWin: Boolean = false,
+        val soundEnabled: Boolean = true,
+        val musicEnabled: Boolean = true,
+        val wheelLevel: Int = 1,
+        val turbineLevel: Int = 1,
+        val pendingWheelId: Int = 1,
+        val pendingTurbineId: Int = 1,
+        val currentLevel: Int = 1,
+        val levelTimeRemaining: Int = GameConfig.LEVEL_DURATION_SECONDS,
+        val isTransitioning: Boolean = false,
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -53,20 +53,20 @@ constructor(
     private var timerJob: Job? = null
 
     val wheels =
-            listOf(
-                    Upgrade(1, "Roadster", 0, R.drawable.wheel_1, 1.2f),
-                    Upgrade(2, "Gripper", 30, R.drawable.wheel_2, 1.4f),
-                    Upgrade(3, "TurboGrip", 60, R.drawable.wheel_3, 1.6f),
-                    Upgrade(4, "FeatherSpin", 90, R.drawable.wheel_4, 1.8f),
-            )
+        listOf(
+            Upgrade(1, "Roadster", 0, R.drawable.wheel_1, 1.2f),
+            Upgrade(2, "Gripper", 30, R.drawable.wheel_2, 1.4f),
+            Upgrade(3, "TurboGrip", 60, R.drawable.wheel_3, 1.6f),
+            Upgrade(4, "FeatherSpin", 90, R.drawable.wheel_4, 1.8f),
+        )
 
     val turbines =
-            listOf(
-                    Upgrade(1, "Breeze", 0, R.drawable.turbine_1, 1.2f),
-                    Upgrade(2, "Draft", 30, R.drawable.turbine_2, 1.4f),
-                    Upgrade(3, "Gust", 60, R.drawable.turbine_3, 1.6f),
-                    Upgrade(4, "Cyclone", 90, R.drawable.turbine_4, 1.8f),
-            )
+        listOf(
+            Upgrade(1, "Breeze", 0, R.drawable.turbine_1, 1.2f),
+            Upgrade(2, "Draft", 30, R.drawable.turbine_2, 1.4f),
+            Upgrade(3, "Gust", 60, R.drawable.turbine_3, 1.6f),
+            Upgrade(4, "Cyclone", 90, R.drawable.turbine_4, 1.8f),
+        )
 
     init {
         observeRepository()
@@ -75,73 +75,51 @@ constructor(
     private fun observeRepository() {
         viewModelScope.launch {
             combine(
-                            repository.eggsBalance,
-                            repository.soundEnabled,
-                            repository.musicEnabled,
-                            repository.selectedWheel,
-                            repository.selectedTurbine
-                    ) { eggs, sound, music, wheel, turbine ->
-                // Only update pending if we haven't manipulated them locally yet?
-                // Or always sync them if the source of truth changes?
-                // For simplicity, let's sync pending to active if the active one changes externally
-                // (or on first load), but usually we want to keep local pending state if user is
-                // editing.
-                // However, since repo is single source of truth for persistent state:
+                repository.eggsBalance,
+                repository.soundEnabled,
+                repository.musicEnabled,
+                repository.selectedWheel,
+                repository.selectedTurbine
+            ) { eggs, sound, music, wheel, turbine ->
+
                 _uiState.value.copy(
-                        eggs = eggs,
-                        soundEnabled = sound,
-                        musicEnabled = music,
-                        wheelLevel = wheel,
-                        turbineLevel = turbine,
-                        // We only sync pending to actual on data arrival IF we assume a fresh start
-                        // or if we want to reset. Ideally we check if they are set.
-                        // Let's just update them. If user is in middle of selection and db updates,
-                        // it might jump.
-                        // But DB updates usually come from 'apply'.
-                        pendingWheelId =
-                                if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel)
-                                        wheel
-                                else _uiState.value.pendingWheelId,
-                        pendingTurbineId =
-                                if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel)
-                                        turbine
-                                else _uiState.value.pendingTurbineId
+                    eggs = eggs,
+                    soundEnabled = sound,
+                    musicEnabled = music,
+                    wheelLevel = wheel,
+                    turbineLevel = turbine,
+
+                    pendingWheelId =
+                        if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel)
+                            wheel
+                        else _uiState.value.pendingWheelId,
+                    pendingTurbineId =
+                        if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel)
+                            turbine
+                        else _uiState.value.pendingTurbineId
                 )
             }
-                    .collect { newState ->
-                        // Ensure if it's the very first load (defaults), we sync pending to loaded
-                        // values
-                        // This logic above is a bit tricky with the 'if'.
-                        // Simplified: Let's trust the VM state for pending, unless we just started.
-                        // Actually, let's just update the persistent fields.
-                        // We will handle initialization properly in a separate block or accept that
-                        // clean start -> pending=1 (default) might be wrong if saved=2.
+                .collect { newState ->
+                    var resultingState =
+                        _uiState.value.copy(
+                            eggs = newState.eggs,
+                            soundEnabled = newState.soundEnabled,
+                            musicEnabled = newState.musicEnabled,
+                            wheelLevel = newState.wheelLevel,
+                            turbineLevel = newState.turbineLevel
+                        )
 
-                        // Better approach for sync:
-                        var resultingState =
-                                _uiState.value.copy(
-                                        eggs = newState.eggs,
-                                        soundEnabled = newState.soundEnabled,
-                                        musicEnabled = newState.musicEnabled,
-                                        wheelLevel = newState.wheelLevel,
-                                        turbineLevel = newState.turbineLevel
-                                )
-
-                        // If this is the FIRST real update (e.g. going from default 1 to saved 3),
-                        // we might want to sync pending.
-                        // A simple heuristic: if pendingXXX match the OLD activeXXX, update them to
-                        // NEW activeXXX.
-                        if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel) {
-                            resultingState =
-                                    resultingState.copy(pendingWheelId = newState.wheelLevel)
-                        }
-                        if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel) {
-                            resultingState =
-                                    resultingState.copy(pendingTurbineId = newState.turbineLevel)
-                        }
-
-                        _uiState.value = resultingState
+                    if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel) {
+                        resultingState =
+                            resultingState.copy(pendingWheelId = newState.wheelLevel)
                     }
+                    if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel) {
+                        resultingState =
+                            resultingState.copy(pendingTurbineId = newState.turbineLevel)
+                    }
+
+                    _uiState.value = resultingState
+                }
         }
     }
 
@@ -168,22 +146,22 @@ constructor(
 
     fun moveRight() {
         _uiState.value =
-                _uiState.value.copy(playerLane = minOf(LANES - 1, _uiState.value.playerLane + 1))
+            _uiState.value.copy(playerLane = minOf(LANES - 1, _uiState.value.playerLane + 1))
     }
 
     fun startRun(soundManager: SoundManager) {
         _uiState.value =
-                _uiState.value.copy(
-                        score = 0,
-                        showResult = false,
-                        isWin = false,
-                        showTutorial = false,
-                        items = emptyList(),
-                        isPaused = false,
-                        currentLevel = 1,
-                        levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
-                        isTransitioning = false
-                )
+            _uiState.value.copy(
+                score = 0,
+                showResult = false,
+                isWin = false,
+                showTutorial = false,
+                items = emptyList(),
+                isPaused = false,
+                currentLevel = 1,
+                levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
+                isTransitioning = false
+            )
         loopJob?.cancel()
         timerJob?.cancel()
         loopJob = viewModelScope.launch { loop(soundManager) }
@@ -227,11 +205,11 @@ constructor(
         // Move to next level
         val nextLevel = _uiState.value.currentLevel + 1
         _uiState.value =
-                _uiState.value.copy(
-                        currentLevel = nextLevel,
-                        levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
-                        isTransitioning = false
-                )
+            _uiState.value.copy(
+                currentLevel = nextLevel,
+                levelTimeRemaining = GameConfig.LEVEL_DURATION_SECONDS,
+                isTransitioning = false
+            )
     }
 
     private suspend fun loop(soundManager: SoundManager) {
@@ -254,11 +232,11 @@ constructor(
 
         // Random spawning - only spawn sometimes
         val spawnFrequency =
-                when (_uiState.value.currentLevel) {
-                    1 -> 4 // Easy: spawn every 4th tick
-                    2 -> 3 // Medium: spawn every 3rd tick
-                    else -> 2 // Hard: spawn every 2nd tick
-                }
+            when (_uiState.value.currentLevel) {
+                1 -> 6 // Easy: spawn every 6th tick (reduced density)
+                2 -> 4 // Medium: spawn every 4th tick
+                else -> 3 // Hard: spawn every 3rd tick
+            }
 
         if (counter % spawnFrequency != 0) return
         if (Math.random() > 0.6) return // 60% chance to skip even when counter matches
@@ -290,8 +268,8 @@ constructor(
                         soundManager.playEffect(R.raw.sfx_crash)
                     }
                 }
-                // Keep item on screen a bit longer before removing
-                if (progressed.speed >= 1.2f) {
+                // Keep item on screen longer before removing (completely off-screen)
+                if (progressed.speed >= 1.5f) {
                     // Item is off screen, don't add to updated list
                 } else {
                     updated.add(progressed)
@@ -307,8 +285,6 @@ constructor(
         }
         if (crashed) {
             showResult(false)
-        } else if (score >= 50) {
-            showResult(true)
         }
     }
 
@@ -341,18 +317,6 @@ constructor(
         if (targetId == currentId) return
 
         val upgrade = wheels.find { it.id == targetId } ?: return
-
-        // Check if already purchased?
-        // NOTE: The model doesn't seem to track "purchased" status separate from selection.
-        // Assuming strictly linear upgrades or re-purchase?
-        // User asked to "fix" it. Assuming simple Logic:
-        // If you select it, you verify price. If you already have it (lower level?)
-        // The original logic was: if price <= eggs, buy&select.
-        // It seems upgrades are non-linear or just individual items.
-        // Let's assume if it is NOT the current one, we pay.
-        // Ideally we should track "Owned" items.
-        // But based on available code, price is deducted on selection.
-        // I will stick to price check.
 
         if (upgrade.price <= _uiState.value.eggs) {
             viewModelScope.launch {

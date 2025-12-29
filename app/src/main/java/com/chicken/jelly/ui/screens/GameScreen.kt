@@ -51,33 +51,35 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
     Box(modifier = Modifier.fillMaxSize()) {
         // Background based on current level
         val backgroundRes =
-                when (state.currentLevel) {
-                    1 -> R.drawable.bg_game // Level 1
-                    2 -> R.drawable.bg_garage // Level 2 (placeholder, replace with actual)
-                    else -> R.drawable.bg_menu // Level 3 (placeholder, replace with actual)
-                }
+            when (state.currentLevel) {
+                1 -> R.drawable.bg_game // Level 1
+                2 -> R.drawable.bg_garage // Level 2 (placeholder, replace with actual)
+                else -> R.drawable.bg_menu // Level 3 (placeholder, replace with actual)
+            }
 
         Image(
-                painter = painterResource(id = backgroundRes),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+            painter = painterResource(id = backgroundRes),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 RoundIconButton(icon = R.drawable.ic_home, onClick = onExit)
 
                 // Timer display
                 OutlineText(
-                        text = "${state.levelTimeRemaining}s",
-                        fontFamily = font,
-                        fontSize = 32,
-                        color = if (state.levelTimeRemaining <= 5) Color.Red else Color.White,
-                        outlineThickness = 3.dp
+                    text = "${state.levelTimeRemaining}s",
+                    fontFamily = font,
+                    fontSize = 32,
+                    color = if (state.levelTimeRemaining <= 5) Color.Red else Color.White,
+                    outlineThickness = 3.dp
                 )
 
                 EggBadge(value = state.eggs)
@@ -92,18 +94,24 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
                 }
             }
             Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Image(
-                        painter = painterResource(id = R.drawable.ic_arrow),
-                        contentDescription = "Left",
-                        modifier = Modifier.size(72.dp).clickableNoRipple { viewModel.moveLeft() }
+                    painter = painterResource(id = R.drawable.ic_arrow),
+                    contentDescription = "Left",
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clickableNoRipple { viewModel.moveLeft() }
                 )
                 Image(
-                        painter = painterResource(id = R.drawable.ic_arrow),
-                        contentDescription = "Right",
-                        modifier = Modifier.size(72.dp).clickableNoRipple { viewModel.moveRight() }
+                    painter = painterResource(id = R.drawable.ic_arrow),
+                    contentDescription = "Right",
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clickableNoRipple { viewModel.moveRight() }
                 )
             }
         }
@@ -118,11 +126,11 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
         if (state.showResult) {
             Box(modifier = Modifier.align(Alignment.Center)) {
                 ResultOverlay(
-                        fontFamily = font,
-                        eggs = state.eggs,
-                        win = state.isWin,
-                        onRetry = { viewModel.startRun(soundManager) },
-                        onUpgrade = onExit
+                    fontFamily = font,
+                    eggs = state.eggs,
+                    win = state.isWin,
+                    onRetry = { viewModel.startRun(soundManager) },
+                    onUpgrade = onExit
                 )
             }
         }
@@ -133,15 +141,18 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
 private fun LaneView(playerLane: Int) {
     Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceEvenly) {
         repeat(GameConfig.LANE_COUNT) { index ->
-            Box(modifier = Modifier.weight(1f).fillMaxSize()) {
+            Box(modifier = Modifier
+                .weight(1f)
+                .fillMaxSize()) {
                 if (index == playerLane) {
                     Box(
-                            modifier =
-                                    Modifier.align(Alignment.BottomCenter)
-                                            .padding(bottom = GameConfig.laneIndicatorBottomPadding)
-                                            .background(Color(0x33FFFFFF))
-                                            .height(GameConfig.laneIndicatorHeight)
-                                            .fillMaxWidth()
+                        modifier =
+                            Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = GameConfig.laneIndicatorBottomPadding)
+                                .background(Color(0x33FFFFFF))
+                                .height(GameConfig.laneIndicatorHeight)
+                                .fillMaxWidth()
                     )
                 }
             }
@@ -162,20 +173,21 @@ private fun BoxScope.ItemLayer(state: GameViewModel.UiState) {
         val scale = itemSize.value / 64f // Normalize to base size
 
         Image(
-                painter =
-                        painterResource(
-                                id = if (item.isReward) R.drawable.egg else R.drawable.ic_garage
-                        ),
-                contentDescription = null,
-                modifier =
-                        Modifier.align(Alignment.TopCenter)
-                                .offset(x = horizontalOffset, y = verticalOffset)
-                                .size(64.dp)
-                                .graphicsLayer {
-                                    scaleX = scale
-                                    scaleY = scale
-                                },
-                contentScale = ContentScale.Fit
+            painter =
+                painterResource(
+                    id = if (item.isReward) R.drawable.egg else R.drawable.ic_garage
+                ),
+            contentDescription = null,
+            modifier =
+                Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(x = horizontalOffset, y = verticalOffset)
+                    .size(64.dp)
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    },
+            contentScale = ContentScale.Fit
         )
     }
 }
@@ -183,28 +195,29 @@ private fun BoxScope.ItemLayer(state: GameViewModel.UiState) {
 @Composable
 private fun LevelTransitionOverlay(level: Int, font: FontFamily) {
     val scale by
-            animateFloatAsState(
-                    targetValue = 0.5f,
-                    animationSpec = tween(durationMillis = 2000),
-                    label = "transitionScale"
-            )
+    animateFloatAsState(
+        targetValue = 0.5f,
+        animationSpec = tween(durationMillis = 2000),
+        label = "transitionScale"
+    )
 
     Box(
-            modifier =
-                    Modifier.fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.7f))
-                            .graphicsLayer {
-                                scaleX = scale
-                                scaleY = scale
-                            },
-            contentAlignment = Alignment.Center
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.7f))
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                },
+        contentAlignment = Alignment.Center
     ) {
         OutlineText(
-                text = "Level $level",
-                fontFamily = font,
-                fontSize = 48,
-                color = Color.White,
-                outlineThickness = 4.dp
+            text = "Level $level",
+            fontFamily = font,
+            fontSize = 48,
+            color = Color.White,
+            outlineThickness = 4.dp
         )
     }
 }
@@ -212,19 +225,21 @@ private fun LevelTransitionOverlay(level: Int, font: FontFamily) {
 @Composable
 private fun TutorialOverlay(font: FontFamily, onStart: () -> Unit) {
     Box(
-            modifier = Modifier.fillMaxSize().background(Color(0x88000000)),
-            contentAlignment = Alignment.Center
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0x88000000)),
+        contentAlignment = Alignment.Center
     ) {
         Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(16.dp)
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(16.dp)
         ) {
             OutlineText(
-                    text = "Tap Start to drift!",
-                    fontFamily = font,
-                    fontSize = 28,
-                    color = Color.White
+                text = "Tap Start to drift!",
+                fontFamily = font,
+                fontSize = 28,
+                color = Color.White
             )
             Spacer(modifier = Modifier.height(12.dp))
             WideButton(text = "Start", onClick = onStart)
@@ -235,32 +250,33 @@ private fun TutorialOverlay(font: FontFamily, onStart: () -> Unit) {
 @Composable
 private fun BoxScope.PlayerCar(playerLane: Int) {
     val targetOffset =
-            if (playerLane in 0 until GameConfig.LANE_COUNT) {
-                GameConfig.playerCarLaneOffsets[playerLane]
-            } else {
-                0.dp
-            }
+        if (playerLane in 0 until GameConfig.LANE_COUNT) {
+            GameConfig.playerCarLaneOffsets[playerLane]
+        } else {
+            0.dp
+        }
 
     // Smooth animation for lane changes
     val horizontalOffset by
-            animateDpAsState(
-                    targetValue = targetOffset,
-                    animationSpec = tween(durationMillis = 200),
-                    label = "playerCarOffset"
-            )
+    animateDpAsState(
+        targetValue = targetOffset,
+        animationSpec = tween(durationMillis = 200),
+        label = "playerCarOffset"
+    )
 
     Image(
-            painter = painterResource(id = R.drawable.player_game),
-            contentDescription = null,
-            modifier =
-                    Modifier.align(Alignment.BottomCenter)
-                            .offset(x = horizontalOffset, y = -GameConfig.playerCarBottomPadding)
-                            .height(GameConfig.playerCarHeight)
+        painter = painterResource(id = R.drawable.player_game),
+        contentDescription = null,
+        modifier =
+            Modifier
+                .align(Alignment.BottomCenter)
+                .offset(x = horizontalOffset, y = -GameConfig.playerCarBottomPadding)
+                .height(GameConfig.playerCarHeight)
     )
 }
 
 @Composable
 fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
-        clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
-            onClick()
-        }
+    clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+        onClick()
+    }

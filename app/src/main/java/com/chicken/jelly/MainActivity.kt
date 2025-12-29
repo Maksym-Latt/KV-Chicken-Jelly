@@ -3,17 +3,11 @@ package com.chicken.jelly
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.chicken.jelly.navigation.AppNavHost
+import com.chicken.jelly.sound.SoundManager
 import com.chicken.jelly.ui.theme.ChickenJellyTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -29,7 +23,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            MineRunnerTheme {
+            ChickenJellyTheme {
                 AppNavHost(soundManager)
             }
         }
@@ -59,9 +53,5 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         soundManager.release()
         super.onDestroy()
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
     }
 }

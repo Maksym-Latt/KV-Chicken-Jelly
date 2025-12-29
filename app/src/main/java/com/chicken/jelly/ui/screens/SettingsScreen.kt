@@ -49,8 +49,6 @@ fun SettingsScreen(viewModel: GameViewModel, onBack: () -> Unit) {
                 musicEnabled = state.musicEnabled,
                 onSoundToggle = viewModel::toggleSound,
                 onMusicToggle = viewModel::toggleMusic,
-                onPrivacy = {},
-                onTerms = {}
             )
         }
     }

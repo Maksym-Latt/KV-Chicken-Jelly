@@ -30,7 +30,7 @@ fun WideButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     red: Boolean = false,
-    textSize: Int = 54,
+    textSize: Int = 46,
 ) {
     val background = if (red) R.drawable.btn_red_bg else R.drawable.btn_green_bg
 

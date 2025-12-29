@@ -1,5 +1,6 @@
 package com.chicken.jelly.ui.components
 
+import android.R.attr.maxLines
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.MaterialTheme
@@ -14,6 +15,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 
@@ -30,21 +34,29 @@ fun OutlineText(
     fontWeight: FontWeight = FontWeight.Bold,
     textAlign: TextAlign = TextAlign.Center,
 ) {
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        val style = TextStyle(
-            color = outline,
-            fontSize = fontSize.sp,
-            letterSpacing = letterSpacing,
-            fontFamily = fontFamily,
-            fontWeight = fontWeight,
-            textAlign = textAlign,
-        )
+    val density = LocalDensity.current
+    val strokePx = with(density) { outlineThickness.toPx() }
 
-        Text(text = text, style = style, modifier = Modifier.offset(outlineThickness, outlineThickness))
-        Text(text = text, style = style, modifier = Modifier.offset(-outlineThickness, -outlineThickness))
+    val baseStyle = TextStyle(
+        fontSize = fontSize.sp,
+        letterSpacing = letterSpacing,
+        fontFamily = fontFamily,
+        fontWeight = fontWeight,
+        textAlign = textAlign,
+    )
+
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
             text = text,
-            style = style.copy(color = color),
+            style = baseStyle.copy(
+                color = outline,
+                drawStyle = Stroke(width = strokePx)
+            ),
+        )
+
+        Text(
+            text = text,
+            style = baseStyle.copy(color = color),
         )
     }
 }

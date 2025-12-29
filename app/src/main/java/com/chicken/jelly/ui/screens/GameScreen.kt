@@ -1,5 +1,7 @@
 package com.chicken.jelly.ui.screens
 
+import android.R.attr.scaleX
+import android.R.attr.scaleY
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -101,17 +103,20 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_arrow),
+                    painter = painterResource(id = R.drawable.arrow),
                     contentDescription = "Left",
-                    modifier = Modifier
-                        .size(72.dp)
+                    modifier = Modifier.padding(10.dp)
+                        .size(100.dp)
                         .clickableNoRipple { viewModel.moveLeft() }
                 )
                 Image(
-                    painter = painterResource(id = R.drawable.ic_arrow),
+                    painter = painterResource(id = R.drawable.arrow),
                     contentDescription = "Right",
-                    modifier = Modifier
-                        .size(72.dp)
+                    modifier = Modifier.padding(10.dp)
+                        .size(100.dp)
+                        .graphicsLayer {
+                            scaleX = -1f
+                        }
                         .clickableNoRipple { viewModel.moveRight() }
                 )
             }
@@ -142,9 +147,11 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
 private fun LaneView(playerLane: Int) {
     Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceEvenly) {
         repeat(GameConfig.LANE_COUNT) { index ->
-            Box(modifier = Modifier
-                .weight(1f)
-                .fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize()
+            ) {
                 if (index == playerLane) {
                     Box(
                         modifier =
@@ -300,7 +307,8 @@ private fun BoxScope.PlayerCar(state: GameViewModel.UiState) {
                 .graphicsLayer {
                     scaleX = carScale
                     scaleY = carScale
-                }
+                },
+        contentScale = ContentScale.Crop
     )
 }
 

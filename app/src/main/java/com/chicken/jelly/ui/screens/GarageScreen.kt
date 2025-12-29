@@ -220,7 +220,7 @@ fun GarageScreen(
                                     }
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                             textSize = 34
                         )
                     }

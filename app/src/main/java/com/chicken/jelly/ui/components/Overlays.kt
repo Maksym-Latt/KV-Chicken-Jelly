@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.chicken.jelly.R
 
 @Composable
@@ -58,7 +59,7 @@ fun PauseOverlay(
                 text = "Pause",
                 fontFamily = fontFamily,
                 fontSize = 82,
-                outlineThickness = 4.dp
+                outlineThickness = 8.dp
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -110,27 +111,91 @@ fun ResultOverlay(
     win: Boolean,
     onRetry: () -> Unit,
     onUpgrade: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    BaseOverlay {
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+    ) {
         Image(
-            painter = painterResource(id = if (win) R.drawable.player_game else R.drawable.player_garage),
+            painter = painterResource(id = R.drawable.bg_result),
             contentDescription = null,
-            modifier = Modifier.height(180.dp),
-            contentScale = ContentScale.Fit
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlineText(
-            text = if (win) "Egg-cellent!" else "Yolk's on you!",
-            fontFamily = fontFamily,
-            fontSize = 30,
-            color = Color(0xFF7EF35A)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xCC0E1800))
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        EggBadge(value = eggs)
-        Spacer(modifier = Modifier.height(16.dp))
-        WideButton(text = "Try again", onClick = onRetry)
-        Spacer(modifier = Modifier.height(8.dp))
-        WideButton(text = "Upgrade", onClick = onUpgrade)
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(modifier = Modifier.weight(0.7f))
+
+            OutlineText(
+                text = if (win) "Egg-cellent!" else "Yolk's on you!",
+                fontFamily = fontFamily,
+                fontSize = 76,
+                outlineThickness = 8.dp,
+                color = Color.White,
+                outline = Color(0xff0e1800),
+            )
+
+            Spacer(modifier = Modifier.weight(0.25f))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.egg),
+                    contentDescription = null,
+                    modifier = Modifier.height(84.dp),
+                    contentScale = ContentScale.Crop
+                )
+
+                OutlineText(
+                    text = eggs.toString(),
+                    fontFamily = fontFamily,
+                    fontSize = 82,
+                    outlineThickness = 4.dp,
+                    color = Color.White,
+                    outline = Color(0xff0e1800),
+                    letterSpacing = 1.5.sp,
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(0.35f))
+
+            Image(
+                painter = painterResource(id = if (win) R.drawable.player_win else R.drawable.player_lose),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth(0.8f),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.weight(0.25f))
+
+            WideButton(
+                icon = R.drawable.ic_garage,
+                onClick = onUpgrade,
+                modifier = Modifier.fillMaxWidth(0.4f)
+            )
+
+
+            Spacer(modifier = Modifier.weight(0.2f))
+
+            WideButton(
+                text = "Play",
+                onClick = onRetry
+            )
+
+            Spacer(modifier = Modifier.weight(0.5f))
+        }
     }
 }
 
@@ -141,8 +206,6 @@ fun SettingsOverlay(
     musicEnabled: Boolean,
     onSoundToggle: (Boolean) -> Unit,
     onMusicToggle: (Boolean) -> Unit,
-    onPrivacy: () -> Unit,
-    onTerms: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -155,7 +218,7 @@ fun SettingsOverlay(
                 text = "Settings",
                 fontFamily = fontFamily,
                 fontSize = 82,
-                outlineThickness = 4.dp
+                outlineThickness = 8.dp
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -194,8 +257,8 @@ private fun SwitchColumn(
         OutlineText(
             text = label,
             fontFamily = fontFamily,
-            fontSize = 46,
-            outlineThickness = 3.dp
+            fontSize = 36,
+            outlineThickness = 1.dp
         )
         Spacer(modifier = Modifier.height(6.dp))
         GreenPillSwitch(

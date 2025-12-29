@@ -25,9 +25,9 @@ object GameConfig {
     /** Horizontal offset for each lane when items are FAR (at top, just spawned) */
     val laneOffsetsFar =
             listOf(
-                    (-20).dp, // Left lane (closer to center)
+                    (10).dp, // Left lane (closer to center)
                     0.dp, // Center lane
-                    20.dp // Right lane (closer to center)
+                    -10.dp // Right lane (closer to center)
             )
 
     // === Item Scaling Configuration ===
@@ -55,7 +55,7 @@ object GameConfig {
     const val LEVEL_DURATION_SECONDS = 30
 
     /** Stop spawning items this many seconds before level ends */
-    const val STOP_SPAWN_BEFORE_END_SECONDS = 5
+    const val STOP_SPAWN_BEFORE_END_SECONDS = 3
 
     // === Player Car Configuration ===
 
@@ -68,7 +68,7 @@ object GameConfig {
             )
 
     /** Height of the player car */
-    val playerCarHeight: Dp = 200.dp
+    val playerCarHeight: Dp = 150.dp
 
     /** Bottom padding for player car */
     val playerCarBottomPadding: Dp = 0.dp

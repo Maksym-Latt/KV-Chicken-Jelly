@@ -8,7 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.chicken.jelly.R
 
-val RoadRage = FontFamily(Font(R.font.roadrage))
+val RoadRage = FontFamily(Font(R.font.road_rage_regular))
 
 val Typography = Typography(
     bodyLarge = TextStyle(

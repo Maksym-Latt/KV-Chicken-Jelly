@@ -32,9 +32,9 @@ fun PauseOverlay(
     BaseOverlay(modifier = modifier) {
         OutlineText(text = "Pause", fontFamily = fontFamily, fontSize = 32)
         Spacer(modifier = Modifier.height(16.dp))
-        WideButton(text = "Resume", onClick = onResume, fontFamily = fontFamily)
+        WideButton(text = "Resume", onClick = onResume )
         Spacer(modifier = Modifier.height(8.dp))
-        WideButton(text = "Exit", onClick = onExit, fontFamily = fontFamily, red = true)
+        WideButton(text = "Exit", onClick = onExit, red = true)
     }
 }
 
@@ -63,9 +63,9 @@ fun ResultOverlay(
         Spacer(modifier = Modifier.height(8.dp))
         EggBadge(value = eggs)
         Spacer(modifier = Modifier.height(16.dp))
-        WideButton(text = "Try again", onClick = onRetry, fontFamily = fontFamily)
+        WideButton(text = "Try again", onClick = onRetry)
         Spacer(modifier = Modifier.height(8.dp))
-        WideButton(text = "Upgrade", onClick = onUpgrade, fontFamily = fontFamily)
+        WideButton(text = "Upgrade", onClick = onUpgrade)
     }
 }
 
@@ -95,9 +95,9 @@ fun SettingsOverlay(
             fontFamily = fontFamily
         )
         Spacer(modifier = Modifier.height(12.dp))
-        WideButton(text = "Privacy", onClick = onPrivacy, fontFamily = fontFamily)
+        WideButton(text = "Privacy", onClick = onPrivacy)
         Spacer(modifier = Modifier.height(8.dp))
-        WideButton(text = "Terms", onClick = onTerms, fontFamily = fontFamily)
+        WideButton(text = "Terms", onClick = onTerms)
     }
 }
 

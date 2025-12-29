@@ -1,23 +1,30 @@
 package com.chicken.jelly.ui.screens
 
+import android.R.attr.font
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.chicken.jelly.R
 import com.chicken.jelly.sound.SoundManager
 import com.chicken.jelly.ui.components.EggBadge
@@ -28,15 +35,11 @@ import com.chicken.jelly.viewmodel.GameViewModel
 
 @Composable
 fun MenuScreen(
-    viewModel: GameViewModel,
     onPlay: () -> Unit,
     onGarage: () -> Unit,
     onSettings: () -> Unit,
     soundManager: SoundManager,
 ) {
-    val state = viewModel.uiState.collectAsState().value
-    val font = MaterialTheme.typography.bodyLarge.fontFamily ?: FontFamily.Default
-
     LaunchedEffect(Unit) {
         soundManager.playMenuMusic()
     }
@@ -48,30 +51,59 @@ fun MenuScreen(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
+
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 32.dp)
+                .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            OutlineText(text = "Chicken Jelly", fontFamily = font, fontSize = 40)
-            Spacer(modifier = Modifier.height(12.dp))
-            Image(
-                painter = painterResource(id = R.drawable.player_game),
-                contentDescription = null,
-                modifier = Modifier.height(220.dp)
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.weight(2f))
+
+                OutlineText(
+                    text = "Chicken Jelly",
+                    color = Color(0xff5be16d),
+                    outline = Color(0xff0e1800),
+                    fontSize = 90,
+                    outlineThickness = 5.dp,
+                )
+
+                Spacer(modifier = Modifier.weight(4f))
+
+                WideButton(
+                    icon = R.drawable.ic_garage,
+                    onClick = onGarage,
+                    modifier = Modifier.fillMaxWidth(0.5f)
+                )
+
+
+                Spacer(modifier = Modifier.weight(0.3f))
+
+                WideButton(
+                    text = "Play",
+                    onClick = onPlay
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+            }
+
+            Spacer(modifier = Modifier.weight(1.5f))
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+        ) {
+            RoundIconButton(
+                icon = R.drawable.ic_settings,
+                onClick = onSettings
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            WideButton(text = "Play", onClick = onPlay, fontFamily = font)
-            Spacer(modifier = Modifier.height(12.dp))
-            WideButton(text = "Garage", onClick = onGarage, fontFamily = font)
-        }
-        Box(modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)) {
-            RoundIconButton(icon = R.drawable.ic_settings, onClick = onSettings)
-        }
-        Box(modifier = Modifier.align(Alignment.TopStart).padding(16.dp)) {
-            EggBadge(value = state.eggs, fontFamily = font)
         }
     }
 }

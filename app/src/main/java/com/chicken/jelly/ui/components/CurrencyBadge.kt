@@ -1,10 +1,12 @@
 package com.chicken.jelly.ui.components
 
+import android.R.attr.fontFamily
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -18,22 +20,33 @@ import androidx.compose.ui.unit.dp
 import com.chicken.jelly.R
 
 @Composable
-fun EggBadge(value: Int, fontFamily: FontFamily = FontFamily.Default) {
+fun EggBadge(
+    value: Int,
+    modifier: Modifier = Modifier,
+) {
     Box(
-        modifier = Modifier
-            .background(Color(0xFF62D33E), RoundedCornerShape(32.dp))
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+        modifier = modifier,
+        contentAlignment = Alignment.Center
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Image(
+            painter = painterResource(id = R.drawable.btn_short_green_bg),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.height(60.dp)
+        )
+
+        Row(
+            modifier = Modifier
+        ) {
             Image(
                 painter = painterResource(id = R.drawable.egg),
                 contentDescription = null,
-                contentScale = ContentScale.Fit,
+                modifier = Modifier.height(45.dp),
+                contentScale = ContentScale.Crop
             )
             OutlineText(
                 text = value.toString(),
-                fontFamily = fontFamily,
-                fontSize = 20,
+                fontSize = 38,
                 color = Color.White,
                 outline = Color.Black
             )

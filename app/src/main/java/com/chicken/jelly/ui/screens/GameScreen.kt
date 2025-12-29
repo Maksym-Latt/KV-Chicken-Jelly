@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -57,7 +59,7 @@ fun GameScreen(viewModel: GameViewModel, onExit: () -> Unit, soundManager: Sound
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RoundIconButton(icon = R.drawable.ic_home, onClick = onExit)
-                EggBadge(value = state.eggs, fontFamily = font)
+                EggBadge(value = state.eggs)
                 RoundIconButton(icon = R.drawable.ic_pause, onClick = viewModel::pauseGame)
             }
             Box(modifier = Modifier.weight(1f)) {
@@ -144,27 +146,30 @@ private fun LaneView(playerLane: Int) {
 }
 
 @Composable
-private fun ItemLayer(state: GameViewModel.UiState) {
+private fun BoxScope.ItemLayer(state: GameViewModel.UiState) {
     state.items.forEach { item ->
+
         val laneOffset = when (item.lane) {
-            0 -> -80.dp
+            0 -> (-80).dp
             1 -> 0.dp
             else -> 80.dp
         }
-        val vertical = (item.speed * 320).dp
+
+        val verticalOffset = (item.speed * 320).dp
+
         Image(
-            painter = painterResource(id = if (item.isReward) R.drawable.egg else R.drawable.ic_garage),
+            painter = painterResource(
+                id = if (item.isReward) R.drawable.egg else R.drawable.ic_garage
+            ),
             contentDescription = null,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = vertical)
-                .offset(x = laneOffset)
+                .offset(x = laneOffset, y = verticalOffset)
                 .size(64.dp),
-            contentScale = ContentScale.Fit,
+            contentScale = ContentScale.Fit
         )
     }
 }
-
 @Composable
 private fun TutorialOverlay(font: FontFamily, onStart: () -> Unit) {
     Box(
@@ -186,12 +191,16 @@ private fun TutorialOverlay(font: FontFamily, onStart: () -> Unit) {
                 color = Color.White
             )
             Spacer(modifier = Modifier.height(12.dp))
-            WideButton(text = "Start", onClick = onStart, fontFamily = font)
+            WideButton(text = "Start", onClick = onStart)
         }
     }
 }
 
-private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
-    this.then(
-        clickable(indication = null, interactionSource = MutableInteractionSource()) { onClick() }
-    )
+@Composable
+fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
+    clickable(
+        indication = null,
+        interactionSource = remember { MutableInteractionSource() }
+    ) {
+        onClick()
+    }

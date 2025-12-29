@@ -19,23 +19,27 @@ import kotlinx.coroutines.launch
 private const val LANES = 3
 
 @HiltViewModel
-class GameViewModel @Inject constructor(
-    private val repository: GameRepository,
+class GameViewModel
+@Inject
+constructor(
+        private val repository: GameRepository,
 ) : ViewModel() {
 
     data class UiState(
-        val eggs: Int = 0,
-        val score: Int = 0,
-        val playerLane: Int = 1,
-        val items: List<GameItem> = emptyList(),
-        val isPaused: Boolean = false,
-        val showTutorial: Boolean = true,
-        val showResult: Boolean = false,
-        val isWin: Boolean = false,
-        val soundEnabled: Boolean = true,
-        val musicEnabled: Boolean = true,
-        val wheelLevel: Int = 1,
-        val turbineLevel: Int = 1,
+            val eggs: Int = 0,
+            val score: Int = 0,
+            val playerLane: Int = 1,
+            val items: List<GameItem> = emptyList(),
+            val isPaused: Boolean = false,
+            val showTutorial: Boolean = true,
+            val showResult: Boolean = false,
+            val isWin: Boolean = false,
+            val soundEnabled: Boolean = true,
+            val musicEnabled: Boolean = true,
+            val wheelLevel: Int = 1,
+            val turbineLevel: Int = 1,
+            val pendingWheelId: Int = 1,
+            val pendingTurbineId: Int = 1,
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -43,19 +47,21 @@ class GameViewModel @Inject constructor(
 
     private var loopJob: Job? = null
 
-    val wheels = listOf(
-        Upgrade(1, "Roadster", 0, R.drawable.wheel_1),
-        Upgrade(2, "Gripper", 30, R.drawable.wheel_2),
-        Upgrade(3, "TurboGrip", 60, R.drawable.wheel_3),
-        Upgrade(4, "FeatherSpin", 90, R.drawable.wheel_4),
-    )
+    val wheels =
+            listOf(
+                    Upgrade(1, "Roadster", 0, R.drawable.wheel_1),
+                    Upgrade(2, "Gripper", 30, R.drawable.wheel_2),
+                    Upgrade(3, "TurboGrip", 60, R.drawable.wheel_3),
+                    Upgrade(4, "FeatherSpin", 90, R.drawable.wheel_4),
+            )
 
-    val turbines = listOf(
-        Upgrade(1, "Breeze", 0, R.drawable.turbine_1),
-        Upgrade(2, "Draft", 30, R.drawable.turbine_2),
-        Upgrade(3, "Gust", 60, R.drawable.turbine_3),
-        Upgrade(4, "Cyclone", 90, R.drawable.turbine_4),
-    )
+    val turbines =
+            listOf(
+                    Upgrade(1, "Breeze", 0, R.drawable.turbine_1),
+                    Upgrade(2, "Draft", 30, R.drawable.turbine_2),
+                    Upgrade(3, "Gust", 60, R.drawable.turbine_3),
+                    Upgrade(4, "Cyclone", 90, R.drawable.turbine_4),
+            )
 
     init {
         observeRepository()
@@ -64,20 +70,73 @@ class GameViewModel @Inject constructor(
     private fun observeRepository() {
         viewModelScope.launch {
             combine(
-                repository.eggsBalance,
-                repository.soundEnabled,
-                repository.musicEnabled,
-                repository.selectedWheel,
-                repository.selectedTurbine
-            ) { eggs, sound, music, wheel, turbine ->
+                            repository.eggsBalance,
+                            repository.soundEnabled,
+                            repository.musicEnabled,
+                            repository.selectedWheel,
+                            repository.selectedTurbine
+                    ) { eggs, sound, music, wheel, turbine ->
+                // Only update pending if we haven't manipulated them locally yet?
+                // Or always sync them if the source of truth changes?
+                // For simplicity, let's sync pending to active if the active one changes externally
+                // (or on first load), but usually we want to keep local pending state if user is
+                // editing.
+                // However, since repo is single source of truth for persistent state:
                 _uiState.value.copy(
-                    eggs = eggs,
-                    soundEnabled = sound,
-                    musicEnabled = music,
-                    wheelLevel = wheel,
-                    turbineLevel = turbine
+                        eggs = eggs,
+                        soundEnabled = sound,
+                        musicEnabled = music,
+                        wheelLevel = wheel,
+                        turbineLevel = turbine,
+                        // We only sync pending to actual on data arrival IF we assume a fresh start
+                        // or if we want to reset. Ideally we check if they are set.
+                        // Let's just update them. If user is in middle of selection and db updates,
+                        // it might jump.
+                        // But DB updates usually come from 'apply'.
+                        pendingWheelId =
+                                if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel)
+                                        wheel
+                                else _uiState.value.pendingWheelId,
+                        pendingTurbineId =
+                                if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel)
+                                        turbine
+                                else _uiState.value.pendingTurbineId
                 )
-            }.collect { newState -> _uiState.value = newState }
+            }
+                    .collect { newState ->
+                        // Ensure if it's the very first load (defaults), we sync pending to loaded
+                        // values
+                        // This logic above is a bit tricky with the 'if'.
+                        // Simplified: Let's trust the VM state for pending, unless we just started.
+                        // Actually, let's just update the persistent fields.
+                        // We will handle initialization properly in a separate block or accept that
+                        // clean start -> pending=1 (default) might be wrong if saved=2.
+
+                        // Better approach for sync:
+                        var resultingState =
+                                _uiState.value.copy(
+                                        eggs = newState.eggs,
+                                        soundEnabled = newState.soundEnabled,
+                                        musicEnabled = newState.musicEnabled,
+                                        wheelLevel = newState.wheelLevel,
+                                        turbineLevel = newState.turbineLevel
+                                )
+
+                        // If this is the FIRST real update (e.g. going from default 1 to saved 3),
+                        // we might want to sync pending.
+                        // A simple heuristic: if pendingXXX match the OLD activeXXX, update them to
+                        // NEW activeXXX.
+                        if (_uiState.value.pendingWheelId == _uiState.value.wheelLevel) {
+                            resultingState =
+                                    resultingState.copy(pendingWheelId = newState.wheelLevel)
+                        }
+                        if (_uiState.value.pendingTurbineId == _uiState.value.turbineLevel) {
+                            resultingState =
+                                    resultingState.copy(pendingTurbineId = newState.turbineLevel)
+                        }
+
+                        _uiState.value = resultingState
+                    }
         }
     }
 
@@ -103,18 +162,20 @@ class GameViewModel @Inject constructor(
     }
 
     fun moveRight() {
-        _uiState.value = _uiState.value.copy(playerLane = minOf(LANES - 1, _uiState.value.playerLane + 1))
+        _uiState.value =
+                _uiState.value.copy(playerLane = minOf(LANES - 1, _uiState.value.playerLane + 1))
     }
 
     fun startRun(soundManager: SoundManager) {
-        _uiState.value = _uiState.value.copy(
-            score = 0,
-            showResult = false,
-            isWin = false,
-            showTutorial = false,
-            items = emptyList(),
-            isPaused = false
-        )
+        _uiState.value =
+                _uiState.value.copy(
+                        score = 0,
+                        showResult = false,
+                        isWin = false,
+                        showTutorial = false,
+                        items = emptyList(),
+                        isPaused = false
+                )
         loopJob?.cancel()
         loopJob = viewModelScope.launch { loop(soundManager) }
     }
@@ -190,20 +251,55 @@ class GameViewModel @Inject constructor(
         loopJob?.cancel()
     }
 
-    fun selectWheel(upgrade: Upgrade) {
-        viewModelScope.launch {
-            if (upgrade.price <= _uiState.value.eggs) {
+    // --- Selection Logic ---
+
+    fun selectWheelById(id: Int) {
+        _uiState.value = _uiState.value.copy(pendingWheelId = id)
+    }
+
+    fun selectTurbineById(id: Int) {
+        _uiState.value = _uiState.value.copy(pendingTurbineId = id)
+    }
+
+    fun applySelectedWheel() {
+        val targetId = _uiState.value.pendingWheelId
+        val currentId = _uiState.value.wheelLevel
+        if (targetId == currentId) return
+
+        val upgrade = wheels.find { it.id == targetId } ?: return
+
+        // Check if already purchased?
+        // NOTE: The model doesn't seem to track "purchased" status separate from selection.
+        // Assuming strictly linear upgrades or re-purchase?
+        // User asked to "fix" it. Assuming simple Logic:
+        // If you select it, you verify price. If you already have it (lower level?)
+        // The original logic was: if price <= eggs, buy&select.
+        // It seems upgrades are non-linear or just individual items.
+        // Let's assume if it is NOT the current one, we pay.
+        // Ideally we should track "Owned" items.
+        // But based on available code, price is deducted on selection.
+        // I will stick to price check.
+
+        if (upgrade.price <= _uiState.value.eggs) {
+            viewModelScope.launch {
                 repository.updateEggs(_uiState.value.eggs - upgrade.price)
-                repository.selectWheel(upgrade.id)
+                repository.selectWheel(targetId)
+                // Pending stays as is, acting as the new current.
             }
         }
     }
 
-    fun selectTurbine(upgrade: Upgrade) {
-        viewModelScope.launch {
-            if (upgrade.price <= _uiState.value.eggs) {
+    fun applySelectedTurbine() {
+        val targetId = _uiState.value.pendingTurbineId
+        val currentId = _uiState.value.turbineLevel
+        if (targetId == currentId) return
+
+        val upgrade = turbines.find { it.id == targetId } ?: return
+
+        if (upgrade.price <= _uiState.value.eggs) {
+            viewModelScope.launch {
                 repository.updateEggs(_uiState.value.eggs - upgrade.price)
-                repository.selectTurbine(upgrade.id)
+                repository.selectTurbine(targetId)
             }
         }
     }

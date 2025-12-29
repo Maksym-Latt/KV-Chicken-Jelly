@@ -49,7 +49,6 @@ fun AppNavHost(soundManager: SoundManager, modifier: Modifier = Modifier) {
         }
         composable(AppDestination.Menu.route) {
             MenuScreen(
-                viewModel = gameViewModel,
                 onPlay = {
                     soundManager.playGameMusic()
                     navController.navigate(AppDestination.Game.route)

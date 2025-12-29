@@ -49,6 +49,14 @@ constructor(
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState
 
+    private val currentSpeedMultiplier: Float
+        get() {
+            val state = _uiState.value
+            val wheelMod = wheels.find { it.id == state.wheelLevel }?.speedModifier ?: 1.0f
+            val turbineMod = turbines.find { it.id == state.turbineLevel }?.speedModifier ?: 1.0f
+            return wheelMod * turbineMod
+        }
+
     private var loopJob: Job? = null
     private var timerJob: Job? = null
 
@@ -229,19 +237,22 @@ constructor(
         if (_uiState.value.levelTimeRemaining <= GameConfig.STOP_SPAWN_BEFORE_END_SECONDS) return
 
         // Random spawning - even less frequent for performance and clarity
-        val spawnFrequency =
+        val multiplier = currentSpeedMultiplier
+        val baseFrequency =
                 when (_uiState.value.currentLevel) {
-                    1 -> 20 // Level 1: spawn every 1s (20 ticks * 50ms)
-                    2 -> 15 // Level 2: spawn every 750ms
-                    else -> 10 // Level 3: spawn every 500ms
+                    1 -> 30 // Normal level 1
+                    2 -> 25 // Normal level 2
+                    else -> 20 // Normal level 3
                 }
+
+        val spawnFrequency = maxOf(5, (baseFrequency / multiplier).toInt())
 
         if (counter % spawnFrequency != 0) return
         if (Math.random() > 0.6) return // 60% chance to skip even when counter matches
 
         val reward = Math.random() > 0.3 // 70% chance of reward (egg)
         val lane = (Math.random() * LANES).toInt() // Random lane
-        val speed = 0.12f + 0.02f * (_uiState.value.turbineLevel - 1)
+        val speed = (0.06f + 0.01f * (_uiState.value.turbineLevel - 1)) * multiplier
         val newItem = GameItem(counter, lane, reward, speed)
         _uiState.value = _uiState.value.copy(items = _uiState.value.items + newItem)
     }
@@ -253,7 +264,8 @@ constructor(
         var crashed = false
 
         _uiState.value.items.forEach { item ->
-            var progressed = item.copy(speed = item.speed + 0.015f)
+            val multiplier = currentSpeedMultiplier
+            var progressed = item.copy(speed = item.speed + 0.0075f * multiplier)
 
             if (!progressed.isCollisionChecked && progressed.speed >= GameConfig.COLLISION_THRESHOLD
             ) {

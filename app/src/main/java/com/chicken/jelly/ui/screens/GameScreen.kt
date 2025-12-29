@@ -263,12 +263,22 @@ private fun BoxScope.PlayerCar(state: GameViewModel.UiState) {
                     label = "carScale"
             )
 
+    // Drive forward (upwards) during transitions
+    val carVerticalOffset by
+            animateDpAsState(
+                    targetValue =
+                            if (isTransitioning) (-400).dp
+                            else (-GameConfig.playerCarBottomPadding),
+                    animationSpec = tween(1500),
+                    label = "carVerticalOffset"
+            )
+
     Image(
             painter = painterResource(id = R.drawable.player_game),
             contentDescription = null,
             modifier =
                     Modifier.align(Alignment.BottomCenter)
-                            .offset(x = horizontalOffset, y = -GameConfig.playerCarBottomPadding)
+                            .offset(x = horizontalOffset, y = carVerticalOffset)
                             .height(GameConfig.playerCarHeight)
                             .graphicsLayer {
                                 scaleX = carScale
